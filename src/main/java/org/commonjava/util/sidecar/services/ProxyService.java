@@ -1,6 +1,5 @@
 package org.commonjava.util.sidecar.services;
 
-
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.MultiMap;
@@ -86,7 +85,7 @@ public class ProxyService
     public Uni<Response> doHead( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                client -> wrapAsyncCall( client.head( p )
+                (client, service) -> wrapAsyncCall( client.head( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
                         .send() ) ) );
@@ -95,10 +94,10 @@ public class ProxyService
     public Uni<Response> doGet( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                client -> wrapAsyncCall( client.get( p )
-                        .putHeaders( getHeaders( request ) )
-                        .timeout( timeout )
-                        .send() ) ) );
+                (client, service) ->  wrapAsyncCall( client.get( p )
+                                .putHeaders( getHeaders( request ) )
+                                .timeout( timeout )
+                                .send()) ) );
     }
 
     public Uni<Response> doPost( String path, InputStream is, HttpServerRequest request ) throws Exception
@@ -106,7 +105,7 @@ public class ProxyService
         Buffer buf = Buffer.buffer( IOUtils.toByteArray( is ) );
 
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                client -> wrapAsyncCall( client.post( p )
+                (client, service) -> wrapAsyncCall( client.post( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
                         .sendBuffer( buf ) ) ) );
@@ -117,7 +116,7 @@ public class ProxyService
         Buffer buf = Buffer.buffer( IOUtils.toByteArray( is ) );
 
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                client -> wrapAsyncCall( client.put( p )
+                (client, service) -> wrapAsyncCall( client.put( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
                         .sendBuffer( buf ) ) ) );
@@ -126,7 +125,7 @@ public class ProxyService
     public Uni<Response> doDelete( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                client -> wrapAsyncCall( client.delete( p )
+                (client, service) -> wrapAsyncCall( client.delete( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
                         .send() ) ) );
@@ -143,7 +142,7 @@ public class ProxyService
             {
                 backOff = DEFAULT_BACKOFF_MILLIS;
             }
-            ret = ret.onFailure( t -> (t instanceof IOException || t instanceof VertxException ) )
+            ret = ret.onFailure( t -> ( t instanceof IOException || t instanceof VertxException ) )
                     .retry()
                     .withBackOff( Duration.ofMillis( backOff ) )
                     .atMost( retry.count );
