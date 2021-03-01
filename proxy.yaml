@@ -1,0 +1,9 @@
+proxy:
+  read-timeout: 30m
+  retry:
+    count: 3
+    interval: 3000
+  services:
+    - host: localhost
+      port: 80
+      path-pattern: /api/.+
