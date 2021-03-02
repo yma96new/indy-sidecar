@@ -49,10 +49,6 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-vertx</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-vertx-web</artifactId>
     </dependency>
     <dependency>
@@ -66,14 +62,6 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-scheduler</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-mutiny</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-mutiny</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -125,6 +113,10 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${compiler-plugin.version}</version>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -137,19 +129,12 @@
         </configuration>
       </plugin>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>11</source>
-          <target>11</target>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
         <version>1.1</version>
         <executions>
           <execution>
-            <id>buildnumbers</id>
+            <id>buildings</id>
             <phase>initialize</phase>
             <goals>
               <goal>create</goal>
@@ -195,6 +180,7 @@
       </build>
       <properties>
         <quarkus.package.type>native</quarkus.package.type>
+        <quarkus.native.additional-build-args>-H:ResourceConfigurationFiles=resources-config.json, -H:ReflectionConfigurationFiles=reflection-config.json</quarkus.native.additional-build-args>
       </properties>
     </profile>
   </profiles>
