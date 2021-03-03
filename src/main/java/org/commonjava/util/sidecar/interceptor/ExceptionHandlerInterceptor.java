@@ -1,4 +1,5 @@
 package org.commonjava.util.sidecar.interceptor;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 import org.commonjava.util.sidecar.exception.ServiceNotFoundException;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import javax.ws.rs.core.Response;
 
 @Interceptor
 @ExceptionHandler
+@RegisterForReflection
 public class ExceptionHandlerInterceptor
 {
     private final Logger logger = LoggerFactory.getLogger( getClass() );
