@@ -22,3 +22,17 @@ quarkus:
       rotation:
         max-backup-index: 5
         max-file-size: 10M
+
+honeycomb:
+    enabled: false
+    dataset: test
+    write-key: test
+    base-sample-rate: 20
+    functions: |-
+      /api/content/.*|sidecar.content|20,
+      /api/folo/admin/.*|sidecar.folo.admin|1,
+      /api/folo/track/.*|sidecar.folo.content|1,
+      /api/admin/stores/.*|sidecar.repo.mgmt|1,
+      /api/promotion/.*|sidecar.promote|1,
+      /api/admin/promotion/.*|sidecar.promote.admin|1,
+      /api/promote/.*|sidecar.promote|1
