@@ -25,7 +25,7 @@ quarkus:
 
 honeycomb:
     enabled: false
-    dataset: test
+    dataset: indy-sidecar-test
     write-key: test
     base-sample-rate: 20
     functions: |-
