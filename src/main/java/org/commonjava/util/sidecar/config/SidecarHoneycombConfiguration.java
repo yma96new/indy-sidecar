@@ -18,21 +18,13 @@ import java.util.regex.Pattern;
 
 import static java.util.Collections.EMPTY_MAP;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.CLIENT_ADDR;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.HTTP_METHOD;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.HTTP_STATUS;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.REQUEST_LATENCY_MILLIS;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.REST_ENDPOINT_PATH;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.TRACE_ID;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.HEADERS;
 
 @ApplicationScoped
 @Startup
 public class SidecarHoneycombConfiguration
                 implements HoneycombConfiguration
 {
-    public static final String ERROR_MESSAGE = "error_message";
-
-    public static final String ERROR_CLASS = "error_class";
 
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
@@ -71,10 +63,7 @@ public class SidecarHoneycombConfiguration
             functionMap.entrySet().forEach( et -> sampleRates.put( et.getKey(), et.getValue().sampleRate ) );
         }
 
-        fieldSet = Collections.unmodifiableSet(
-                        new HashSet<>( Arrays.asList( HTTP_METHOD, HTTP_STATUS, TRACE_ID, CLIENT_ADDR,
-                                                      REST_ENDPOINT_PATH, REQUEST_LATENCY_MILLIS, ERROR_CLASS,
-                                                      ERROR_MESSAGE ) ) );
+        fieldSet = Collections.unmodifiableSet( new HashSet<>( Arrays.asList( HEADERS ) ) );
     }
 
     @Override

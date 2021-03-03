@@ -38,6 +38,8 @@ import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CO
 @MetricsHandler
 public class ProxyService
 {
+    public final static String HEADER_PROXY_TRACE_ID = "Proxy-Trace-Id";
+
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis( 30 ); // default 30 minutes
@@ -90,7 +92,7 @@ public class ProxyService
                 (client, service) -> wrapAsyncCall( client.head( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
-                        .send() ) ) );
+                        .send() ) ), request );
     }
 
     public Uni<Response> doGet( String path, HttpServerRequest request ) throws Exception
@@ -99,7 +101,7 @@ public class ProxyService
                 (client, service) ->  wrapAsyncCall( client.get( p )
                                 .putHeaders( getHeaders( request ) )
                                 .timeout( timeout )
-                                .send()) ) );
+                                .send()) ), request );
     }
 
     public Uni<Response> doPost( String path, InputStream is, HttpServerRequest request ) throws Exception
@@ -110,7 +112,7 @@ public class ProxyService
                 (client, service) -> wrapAsyncCall( client.post( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
-                        .sendBuffer( buf ) ) ) );
+                        .sendBuffer( buf ) ) ), request );
     }
 
     public Uni<Response> doPut( String path, InputStream is, HttpServerRequest request ) throws Exception
@@ -121,7 +123,7 @@ public class ProxyService
                 (client, service) -> wrapAsyncCall( client.put( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
-                        .sendBuffer( buf ) ) ) );
+                        .sendBuffer( buf ) ) ), request );
     }
 
     public Uni<Response> doDelete( String path, HttpServerRequest request ) throws Exception
@@ -130,7 +132,7 @@ public class ProxyService
                 (client, service) -> wrapAsyncCall( client.delete( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
-                        .send() ) ) );
+                        .send() ) ), request );
     }
 
     private Uni<Response> wrapAsyncCall( Uni<HttpResponse<Buffer>> asyncCall )
@@ -220,8 +222,10 @@ public class ProxyService
         R apply( T t ) throws Exception;
     }
 
-    private <R> R normalizePathAnd( String path, CheckedFunction<String, R> action ) throws Exception
+    private <R> R normalizePathAnd( String path, CheckedFunction<String, R> action,HttpServerRequest request ) throws Exception
     {
+        String traceId = UUID.randomUUID().toString();
+        request.headers().set( HEADER_PROXY_TRACE_ID, traceId );
         return action.apply( normalizePath( path ) );
     }
 

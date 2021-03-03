@@ -1,5 +1,6 @@
 package org.commonjava.util.sidecar.interceptor;
 
+import io.honeycomb.beeline.tracing.Span;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import org.commonjava.util.sidecar.config.SidecarHoneycombConfiguration;
@@ -24,6 +25,9 @@ import static java.lang.System.currentTimeMillis;
 @MetricsHandler
 public class MetricsHandlerInterceptor
 {
+
+    public final static String HEADER_PROXY_SPAN_ID = "Proxy-Span-Id";
+
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
@@ -94,7 +98,11 @@ public class MetricsHandlerInterceptor
             {
                 return;
             }
-            honeycombManager.startRootTracer( "sidecar-" + honeycombConfiguration.getFunctionName( path ) ); //
+            Span span = honeycombManager.startRootTracer( "sidecar-" + honeycombConfiguration.getFunctionName( path ) ); //
+            if ( span != null )
+            {
+                request.headers().set( HEADER_PROXY_SPAN_ID, span.getSpanId() );
+            }
             long elapse = currentTimeMillis() - t.get();
             honeycombManager.addFields( elapse, request, item, err );
             honeycombManager.addRootSpanFields();

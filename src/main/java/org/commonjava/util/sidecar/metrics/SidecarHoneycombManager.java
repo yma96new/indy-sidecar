@@ -12,19 +12,16 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.ERROR_CLASS;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.ERROR_MESSAGE;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.HTTP_METHOD;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.LATENCY_MILLIS;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.NOOP;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.PATH_INFO;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.PROXY_TRACE_ID;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.STATUS_CODE;
+import static org.commonjava.util.sidecar.services.ProxyService.HEADER_PROXY_TRACE_ID;
 
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.CLIENT_ADDR;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.EXTERNAL_ID;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.HTTP_METHOD;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.HTTP_STATUS;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.REQUEST_LATENCY_MILLIS;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.REST_ENDPOINT_PATH;
-import static org.commonjava.o11yphant.metrics.RequestContextConstants.TRACE_ID;
-import static org.commonjava.util.sidecar.config.SidecarHoneycombConfiguration.ERROR_CLASS;
-import static org.commonjava.util.sidecar.config.SidecarHoneycombConfiguration.ERROR_MESSAGE;
 
 @ApplicationScoped
 public class SidecarHoneycombManager
@@ -71,19 +68,17 @@ public class SidecarHoneycombManager
             case HTTP_METHOD:
                 ret = request.rawMethod();
                 break;
-            case HTTP_STATUS:
+            case STATUS_CODE:
                 ret = ( resp != null ? resp.getStatus() : null );
                 break;
-            case TRACE_ID:
-                ret = request.getHeader( EXTERNAL_ID );
-                break;
-            case CLIENT_ADDR:
-                ret = request.remoteAddress().host();
-                break;
-            case REST_ENDPOINT_PATH:
+            case PATH_INFO:
                 ret = request.path();
                 break;
-            case REQUEST_LATENCY_MILLIS:
+            case PROXY_TRACE_ID:
+                String traceId = request.getHeader( HEADER_PROXY_TRACE_ID );
+                ret = traceId == null ? NOOP : traceId;
+                break;
+            case LATENCY_MILLIS:
                 ret = elapse;
                 break;
             case ERROR_MESSAGE:
