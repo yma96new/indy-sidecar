@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -217,12 +218,12 @@ public class ProxyService
     }
 
     @FunctionalInterface
-    private interface CheckedFunction<T, R>
+    private interface Function<T, R>
     {
         R apply( T t ) throws Exception;
     }
 
-    private <R> R normalizePathAnd( String path, CheckedFunction<String, R> action,HttpServerRequest request ) throws Exception
+    private Uni<Response> normalizePathAnd( String path, Function<String, Uni<Response>> action, HttpServerRequest request ) throws Exception
     {
         String traceId = UUID.randomUUID().toString();
         request.headers().set( HEADER_PROXY_TRACE_ID, traceId );

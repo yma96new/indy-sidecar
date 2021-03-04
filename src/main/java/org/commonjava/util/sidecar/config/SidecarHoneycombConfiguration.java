@@ -39,7 +39,7 @@ public class SidecarHoneycombConfiguration
     @Inject
     SidecarHoneycombConfObj confObj;
 
-    private Map<String, Function> functionMap = EMPTY_MAP;
+    private Map<String, SLIFunction> functionMap = EMPTY_MAP;
 
     private Map<String, Integer> sampleRates = EMPTY_MAP; // made from functionMap for convenience
 
@@ -50,11 +50,11 @@ public class SidecarHoneycombConfiguration
         if ( isNotBlank( functions ) )
         {
             logger.info( "Set honeycomb configuration, functions: {}", functions );
-            Map<String, Function> m = new HashMap<>();
+            Map<String, SLIFunction> m = new HashMap<>();
             String[] toks = functions.split( "," );
             for ( String s : toks )
             {
-                Function f = Function.parse( s );
+                SLIFunction f = SLIFunction.parse( s );
                 m.put( f.name, f );
             }
             functionMap = Collections.unmodifiableMap( m );
@@ -108,7 +108,7 @@ public class SidecarHoneycombConfiguration
         return confObj.consoleTransport.orElse( false );
     }
 
-    public static class Function
+    public static class SLIFunction
     {
         Pattern pattern;
 
@@ -116,11 +116,11 @@ public class SidecarHoneycombConfiguration
 
         Integer sampleRate;
 
-        public static Function parse( String s )
+        public static SLIFunction parse( String s )
         {
             String[] toks = s.split( "\\|" );
 
-            Function ret = new Function();
+            SLIFunction ret = new SLIFunction();
             ret.pattern = Pattern.compile( toks[0].trim() );
             ret.name = toks[1].trim();
             if ( toks.length > 2 )
@@ -133,13 +133,13 @@ public class SidecarHoneycombConfiguration
         @Override
         public String toString()
         {
-            return "Function{" + "pattern=" + pattern + ", name='" + name + '\'' + ", sampleRate=" + sampleRate + '}';
+            return "SLIFunction{" + "pattern=" + pattern + ", name='" + name + '\'' + ", sampleRate=" + sampleRate + '}';
         }
     }
 
     public String getFunctionName( String path )
     {
-        for ( Function f : functionMap.values() )
+        for ( SLIFunction f : functionMap.values() )
         {
             if ( f.pattern.matcher( path ).matches() )
             {
@@ -149,7 +149,7 @@ public class SidecarHoneycombConfiguration
         return null;
     }
 
-    public Map<String, Function> getFunctionMap()
+    public Map<String, SLIFunction> getFunctionMap()
     {
         return functionMap;
     }

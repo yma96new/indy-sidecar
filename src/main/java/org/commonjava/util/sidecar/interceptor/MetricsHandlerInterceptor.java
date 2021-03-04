@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.lang.System.currentTimeMillis;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.FUNCTION;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.SERVICE;
 
 @Interceptor
 @MetricsHandler
@@ -104,6 +106,8 @@ public class MetricsHandlerInterceptor
                 request.headers().set( HEADER_PROXY_SPAN_ID, span.getSpanId() );
             }
             long elapse = currentTimeMillis() - t.get();
+            honeycombManager.addSpanField( SERVICE, honeycombConfiguration.getServiceName() );
+            honeycombManager.addSpanField( FUNCTION, funcName);
             honeycombManager.addFields( elapse, request, item, err );
             honeycombManager.addRootSpanFields();
             honeycombManager.endTrace();

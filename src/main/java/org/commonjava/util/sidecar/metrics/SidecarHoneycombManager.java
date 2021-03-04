@@ -18,7 +18,7 @@ import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.HTTP_MET
 import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.LATENCY_MILLIS;
 import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.NOOP;
 import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.PATH_INFO;
-import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.PROXY_TRACE_ID;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.TRACE_ID;
 import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.STATUS_CODE;
 import static org.commonjava.util.sidecar.services.ProxyService.HEADER_PROXY_TRACE_ID;
 
@@ -74,7 +74,7 @@ public class SidecarHoneycombManager
             case PATH_INFO:
                 ret = request.path();
                 break;
-            case PROXY_TRACE_ID:
+            case TRACE_ID:
                 String traceId = request.getHeader( HEADER_PROXY_TRACE_ID );
                 ret = traceId == null ? NOOP : traceId;
                 break;
