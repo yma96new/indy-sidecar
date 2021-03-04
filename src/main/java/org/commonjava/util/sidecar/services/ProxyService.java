@@ -10,10 +10,12 @@ import io.vertx.mutiny.ext.web.client.HttpResponse;
 import org.apache.commons.io.IOUtils;
 import org.commonjava.util.sidecar.config.ProxyConfiguration;
 import org.commonjava.util.sidecar.interceptor.ExceptionHandler;
+import org.commonjava.util.sidecar.interceptor.MetricsHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -37,8 +39,11 @@ import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CO
 
 @ApplicationScoped
 @ExceptionHandler
+@MetricsHandler
 public class ProxyService
 {
+    public final static String HEADER_PROXY_TRACE_ID = "Proxy-Trace-Id";
+
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis( 30 ); // default 30 minutes
@@ -92,7 +97,7 @@ public class ProxyService
                 (client, service) -> wrapAsyncCall( client.head( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
-                        .send() ) ) );
+                        .send() ) ), request );
     }
 
     @GET
@@ -102,7 +107,7 @@ public class ProxyService
                 (client, service) ->  wrapAsyncCall( client.get( p )
                                 .putHeaders( getHeaders( request ) )
                                 .timeout( timeout )
-                                .send()) ) );
+                                .send()) ), request );
     }
 
     @GET
@@ -114,7 +119,7 @@ public class ProxyService
                 (client, service) -> wrapAsyncCall( client.post( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
-                        .sendBuffer( buf ) ) ) );
+                        .sendBuffer( buf ) ) ), request );
     }
 
     @GET
@@ -126,7 +131,7 @@ public class ProxyService
                 (client, service) -> wrapAsyncCall( client.put( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
-                        .sendBuffer( buf ) ) ) );
+                        .sendBuffer( buf ) ) ), request );
     }
 
     @GET
@@ -136,7 +141,7 @@ public class ProxyService
                 (client, service) -> wrapAsyncCall( client.delete( p )
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
-                        .send() ) ) );
+                        .send() ) ), request );
     }
 
     private Uni<Response> wrapAsyncCall( Uni<HttpResponse<Buffer>> asyncCall )
@@ -226,8 +231,10 @@ public class ProxyService
         R apply( T t ) throws Exception;
     }
 
-    private Uni<Response> normalizePathAnd( String path, Function<String, Uni<Response>> action ) throws Exception
+    private Uni<Response> normalizePathAnd( String path, Function<String, Uni<Response>> action, HttpServerRequest request ) throws Exception
     {
+        String traceId = UUID.randomUUID().toString();
+        request.headers().set( HEADER_PROXY_TRACE_ID, traceId );
         return action.apply( normalizePath( path ) );
     }
 
