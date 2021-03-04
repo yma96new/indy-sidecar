@@ -2,6 +2,7 @@ package org.commonjava.util.sidecar.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.runtime.Startup;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -32,6 +33,7 @@ import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CO
 
 @Startup
 @ApplicationScoped
+@RegisterForReflection
 public class ProxyConfiguration
 {
     private final Logger logger = LoggerFactory.getLogger( getClass() );
@@ -177,6 +179,7 @@ public class ProxyConfiguration
         return ret;
     }
 
+    @RegisterForReflection
     public static class ServiceConfig
     {
         public String host;
@@ -229,6 +232,7 @@ public class ProxyConfiguration
         }
     }
 
+    @RegisterForReflection
     public static class Retry
     {
         public int count;
@@ -243,6 +247,7 @@ public class ProxyConfiguration
 
     }
 
+    @RegisterForReflection
     public static class Cache
     {
         public boolean enabled;

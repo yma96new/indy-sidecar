@@ -18,6 +18,9 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +65,7 @@ public class ProxyService
         logger.debug( "Init, timeout: {}", timeout );
     }
 
-    private long readTimeout()
+    long readTimeout()
     {
         long t = DEFAULT_TIMEOUT;
         String readTimeout = proxyConfiguration.getReadTimeout();
@@ -87,6 +90,7 @@ public class ProxyService
         logger.debug( "Handle event {}, refresh timeout: {}", EVENT_PROXY_CONFIG_CHANGE, timeout );
     }
 
+    @GET
     public Uni<Response> doHead( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
@@ -96,6 +100,7 @@ public class ProxyService
                         .send() ) ), request );
     }
 
+    @GET
     public Uni<Response> doGet( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
@@ -105,6 +110,7 @@ public class ProxyService
                                 .send()) ), request );
     }
 
+    @GET
     public Uni<Response> doPost( String path, InputStream is, HttpServerRequest request ) throws Exception
     {
         Buffer buf = Buffer.buffer( IOUtils.toByteArray( is ) );
@@ -116,6 +122,7 @@ public class ProxyService
                         .sendBuffer( buf ) ) ), request );
     }
 
+    @GET
     public Uni<Response> doPut( String path, InputStream is, HttpServerRequest request ) throws Exception
     {
         Buffer buf = Buffer.buffer( IOUtils.toByteArray( is ) );
@@ -127,6 +134,7 @@ public class ProxyService
                         .sendBuffer( buf ) ) ), request );
     }
 
+    @GET
     public Uni<Response> doDelete( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
@@ -159,7 +167,7 @@ public class ProxyService
      * Send status 500 with error message body.
      * @param t error
      */
-    private Response handleProxyException( Throwable t )
+    Response handleProxyException( Throwable t )
     {
         logger.error( "Proxy error", t );
         return Response.status( INTERNAL_SERVER_ERROR ).entity( t + ". Caused by: " + t.getCause() ).build();
