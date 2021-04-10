@@ -34,16 +34,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CONFIG_CHANGE;
 
 @Startup
@@ -112,7 +109,6 @@ public class ProxyConfiguration
             catch ( FileNotFoundException e )
             {
                 logger.error( "Load failed", e );
-                return;
             }
         }
         else if ( init )
@@ -156,9 +152,7 @@ public class ProxyConfiguration
 
             if ( parsed.services != null )
             {
-                parsed.services.forEach( sv -> {
-                    overrideIfPresent( sv );
-                } );
+                parsed.services.forEach( this::overrideIfPresent );
             }
 
             if ( md5Hex != null )
@@ -189,7 +183,7 @@ public class ProxyConfiguration
         ProxyConfiguration ret = jsonObject.mapTo( this.getClass() );
         if ( ret.services != null )
         {
-            ret.services.forEach( sv -> sv.normalize() );
+            ret.services.forEach( ServiceConfig::normalize );
         }
         return ret;
     }
@@ -204,8 +198,6 @@ public class ProxyConfiguration
         public boolean ssl;
 
         public String methods;
-
-        public Cache cache;
 
         @JsonProperty( "path-pattern" )
         public String pathPattern;
@@ -231,7 +223,7 @@ public class ProxyConfiguration
         public String toString()
         {
             return "ServiceConfig{" + "host='" + host + '\'' + ", port=" + port + ", ssl=" + ssl + ", methods='"
-                    + methods + '\'' + ", cache=" + cache + ", pathPattern='" + pathPattern + '\'' + '}';
+                    + methods + '\'' + ", pathPattern='" + pathPattern + '\'' + '}';
         }
 
         private void normalize()
@@ -239,10 +231,6 @@ public class ProxyConfiguration
             if ( methods != null )
             {
                 methods = methods.toUpperCase();
-            }
-            if ( cache != null )
-            {
-                cache.normalize();
             }
         }
     }
@@ -262,68 +250,4 @@ public class ProxyConfiguration
 
     }
 
-    @RegisterForReflection
-    public static class Cache
-    {
-        public boolean enabled;
-
-        // True if only read from pre-seed cache, or write to cache for each successful GET request
-        public boolean readonly;
-
-        // Only files match the pattern are cached, null for all files
-        public String pattern;
-
-        // Expiration in PnDTnHnMn, as parsed by java.time.Duration
-        public String expire;
-
-        // Cache dir, default ${runtime_root}/cache
-        public String dir;
-
-        // Cache strategy class name, e.g, PrefixTrimCacheStrategy (or simply PrefixTrim). If not set, use default.
-        public String strategy;
-
-        private void normalize()
-        {
-            if ( isNotBlank( expire ) )
-            {
-                String ls = expire.toLowerCase();
-                String prefix;
-                if ( ls.contains( "d" ) )
-                {
-                    prefix = "P";
-                }
-                else
-                {
-                    prefix = "PT";
-                }
-                expireInSeconds = Duration.parse( prefix + expire ).getSeconds();
-            }
-            if ( isNotBlank( pattern ) )
-            {
-                compiledPattern = Pattern.compile( pattern );
-            }
-        }
-
-        @Override
-        public String toString()
-        {
-            return "Cache{" + "enabled=" + enabled + ", readonly=" + readonly + ", pattern='" + pattern + '\''
-                    + ", expire='" + expire + '\'' + ", dir='" + dir + '\'' + ", strategy='" + strategy + '\''
-                    + ", expireInSeconds=" + expireInSeconds + '}';
-        }
-
-        private transient long expireInSeconds;
-
-        public long getExpireInSeconds()
-        {
-            return expireInSeconds;
-        }
-
-        private transient Pattern compiledPattern;
-
-        public Pattern getCompiledPattern()
-        {
-            return compiledPattern;
-        }
-    }
 }
