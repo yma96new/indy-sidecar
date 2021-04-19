@@ -47,6 +47,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.commonjava.o11yphant.metrics.RequestContextConstants.EXTERNAL_ID;
 import static org.commonjava.o11yphant.metrics.RequestContextConstants.TRACE_ID;
+import static org.commonjava.util.sidecar.services.ArchiveRetrieveService.BUILD_CONFIG_ID;
 import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CONFIG_CHANGE;
 
 @ApplicationScoped
@@ -55,6 +56,8 @@ import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CO
 public class ProxyService
 {
     public final static String HEADER_PROXY_TRACE_ID = "Proxy-Trace-Id";
+
+    private final static String MAVEN_META = "maven-metadata.xml";
 
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
@@ -100,6 +103,12 @@ public class ProxyService
     {
         timeout = readTimeout();
         logger.debug( "Handle event {}, refresh timeout: {}", EVENT_PROXY_CONFIG_CHANGE, timeout );
+    }
+
+    public static boolean doProxy( final String path )
+    {
+        String buildConfigId = System.getProperty( BUILD_CONFIG_ID );
+        return buildConfigId == null || buildConfigId.trim().isEmpty() || path.endsWith( MAVEN_META );
     }
 
     @GET
