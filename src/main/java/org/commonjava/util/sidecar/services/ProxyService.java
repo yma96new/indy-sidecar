@@ -26,6 +26,7 @@ import org.apache.commons.io.IOUtils;
 import org.commonjava.util.sidecar.config.ProxyConfiguration;
 import org.commonjava.util.sidecar.interceptor.ExceptionHandler;
 import org.commonjava.util.sidecar.interceptor.MetricsHandler;
+import org.commonjava.util.sidecar.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +120,13 @@ public class ProxyService
                         .putHeaders( getHeaders( request ) )
                         .timeout( timeout )
                         .send() ) ), request );
+    }
+
+    @GET
+    public Uni<Response> doGet( String path, String type, String name, HttpServerRequest request ) throws Exception
+    {
+        String contentPath = UrlUtils.buildUrl( "/api/content/", "maven", type, name, path );
+        return doGet( contentPath, request );
     }
 
     @GET

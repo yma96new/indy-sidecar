@@ -84,14 +84,14 @@ public class PreSeedResource
         if ( doProxy( path ) )
         {
             logger.debug( "Get proxy resource: {}", path );
-            return proxyService.doGet( path, request );
+            return proxyService.doGet( path, type, name, request );
         }
         if ( !isDecompressed() )
         {
             boolean success = archiveService.decompressArchive();
             if ( !success )
             {
-                return proxyService.doGet( path, request );
+                return proxyService.doGet( path, type, name, request );
             }
         }
         Optional<File> download = archiveService.getLocally( path );
@@ -104,8 +104,7 @@ public class PreSeedResource
         }
         else
         {
-            String contentPath = UrlUtils.buildUrl( "/api/content/", "maven", type, name, path );
-            return proxyService.doGet( contentPath, request );
+            return proxyService.doGet( path, type, name, request );;
         }
     }
 
