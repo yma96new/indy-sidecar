@@ -170,43 +170,7 @@ public class ArchiveRetrieveService
             return false;
         }
 
-        FileInputStream fis;
-        byte[] buffer = new byte[1024];
-        try
-        {
-            fis = new FileInputStream( target );
-            ZipInputStream zis = new ZipInputStream( fis );
-            ZipEntry ze = zis.getNextEntry();
-
-            while ( ze != null )
-            {
-                String fileName = ze.getName();
-                File newFile = new File( localRepository.orElse( DEFAULT_REPO_PATH ) + File.separator + fileName );
-                logger.debug( "Unzipping to {}", newFile.getAbsolutePath() );
-                new File( newFile.getParent() ).mkdirs();
-                FileOutputStream fos = new FileOutputStream( newFile );
-
-                int len;
-                while ( ( len = zis.read( buffer ) ) > 0 )
-                {
-                    fos.write( buffer, 0, len );
-                }
-                fos.close();
-                zis.closeEntry();
-                ze = zis.getNextEntry();
-            }
-            decompressedBuilds.add( buildConfigId );
-            zis.closeEntry();
-            zis.close();
-            fis.close();
-            return true;
-        }
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-            logger.error( "Failed to decompress the archive for build config id: " + buildConfigId, e );
-            return false;
-        }
+        return writeDecompressedFiles( target );
     }
 
     public Optional<File> getLocally( final String path )
@@ -268,6 +232,48 @@ public class ArchiveRetrieveService
             request.releaseConnection();
             request.reset();
             IOUtils.closeQuietly( input, null );
+        }
+    }
+
+    private boolean writeDecompressedFiles( final File target )
+    {
+        String buildConfigId = System.getProperty( BUILD_CONFIG_ID );
+        FileInputStream fis;
+        byte[] buffer = new byte[1024];
+        try
+        {
+            fis = new FileInputStream( target );
+            ZipInputStream zis = new ZipInputStream( fis );
+            ZipEntry ze = zis.getNextEntry();
+
+            while ( ze != null )
+            {
+                String fileName = ze.getName();
+                File newFile = new File( localRepository.orElse( DEFAULT_REPO_PATH ) + File.separator + fileName );
+                logger.debug( "Unzipping to {}", newFile.getAbsolutePath() );
+                new File( newFile.getParent() ).mkdirs();
+                FileOutputStream fos = new FileOutputStream( newFile );
+
+                int len;
+                while ( ( len = zis.read( buffer ) ) > 0 )
+                {
+                    fos.write( buffer, 0, len );
+                }
+                fos.close();
+                zis.closeEntry();
+                ze = zis.getNextEntry();
+            }
+            decompressedBuilds.add( buildConfigId );
+            zis.closeEntry();
+            zis.close();
+            fis.close();
+            return true;
+        }
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+            logger.error( "Failed to decompress the archive for build config id: " + buildConfigId, e );
+            return false;
         }
     }
 }

@@ -104,7 +104,7 @@ public class PreSeedResource
         }
         else
         {
-            return proxyService.doGet( path, type, name, request );;
+            return proxyService.doGet( path, type, name, request );
         }
     }
 
