@@ -1,6 +1,6 @@
 quarkus:
   http:
-    port: 8081
+    port: 8080
     read-timeout: 30m
     limits:
       max-body-size: 500M
@@ -33,5 +33,6 @@ honeycomb:
       /api/folo/admin/.*|sidecar.folo.admin|1,
       /api/folo/track/.*|sidecar.folo.content|1
 
-archive-api: http://localhost:8080/api/archive
-local-repository: ${user.home}/test/repository
+sidecar:
+    archive-api: http://localhost:8081/api/archive
+    local-repository: ${user.home}/test/repository

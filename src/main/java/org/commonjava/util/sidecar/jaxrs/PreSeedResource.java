@@ -21,7 +21,6 @@ import org.apache.commons.io.FileUtils;
 import org.commonjava.util.sidecar.services.ArchiveRetrieveService;
 import org.commonjava.util.sidecar.services.ProxyService;
 import org.commonjava.util.sidecar.util.TransferStreamingOutput;
-import org.commonjava.util.sidecar.util.UrlUtils;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
@@ -45,8 +44,7 @@ import java.io.InputStream;
 import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
-import static org.commonjava.util.sidecar.services.ArchiveRetrieveService.isDecompressed;
-import static org.commonjava.util.sidecar.services.ProxyService.doProxy;
+import static org.commonjava.util.sidecar.util.SidecarUtils.doProxy;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
 
 @Path( "/api/folo/track/{id}/maven/{type: (hosted|group|remote)}/{name}" )
@@ -61,6 +59,7 @@ public class PreSeedResource
     ArchiveRetrieveService archiveService;
 
     @HEAD
+    @Path( "{path: (.*)}" )
     public Uni<Response> head( @PathParam( "path" ) String path, final @Context HttpServerRequest request )
                     throws Exception
     {
@@ -86,7 +85,7 @@ public class PreSeedResource
             logger.debug( "Get proxy resource: {}", path );
             return proxyService.doGet( path, type, name, request );
         }
-        if ( !isDecompressed() )
+        if ( !archiveService.isDecompressed() )
         {
             boolean success = archiveService.decompressArchive();
             if ( !success )
@@ -109,6 +108,7 @@ public class PreSeedResource
     }
 
     @POST
+    @Path( "{path: (.*)}" )
     public Uni<Response> post( @PathParam( "path" ) String path, InputStream is,
                                final @Context HttpServerRequest request ) throws Exception
     {
@@ -117,6 +117,7 @@ public class PreSeedResource
     }
 
     @PUT
+    @Path( "{path: (.*)}" )
     public Uni<Response> put( @PathParam( "path" ) String path, InputStream is,
                               final @Context HttpServerRequest request ) throws Exception
     {
@@ -125,6 +126,7 @@ public class PreSeedResource
     }
 
     @DELETE
+    @Path( "{path: (.*)}" )
     public Uni<Response> delete( @PathParam( "path" ) String path, final @Context HttpServerRequest request )
                     throws Exception
     {

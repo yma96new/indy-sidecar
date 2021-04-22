@@ -27,13 +27,14 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.commonjava.util.sidecar.config.SidecarConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -49,13 +50,13 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
+
 @ApplicationScoped
 public class ArchiveRetrieveService
 {
 
     private final Logger logger = LoggerFactory.getLogger( getClass() );
-
-    public final static String BUILD_CONFIG_ID = "build.config.id";
 
     private final static int CONNECTION_REQUEST_TIMEOUT = 30 * 60 * 1000; // 30m
 
@@ -71,18 +72,14 @@ public class ArchiveRetrieveService
 
     private final String DEFAULT_REPO_PATH = "download";
 
-    @ConfigProperty( name = "archive-api" )
-    public Optional<String> archiveApi;
-
-    @ConfigProperty( name = "local-repository" )
-    private Optional<String> localRepository;
-
     private CloseableHttpClient client;
 
-    public static boolean isDecompressed()
+    @Inject
+    SidecarConfig sidecarConfig;
+
+    public boolean isDecompressed()
     {
-        String buildConfigId = System.getProperty( BUILD_CONFIG_ID );
-        return decompressedBuilds.contains( buildConfigId );
+        return decompressedBuilds.contains( getBuildConfigId() );
     }
 
     @PostConstruct
@@ -131,7 +128,7 @@ public class ArchiveRetrieveService
     {
         try
         {
-            File downloadDir = new File( localRepository.get() );
+            File downloadDir = new File( sidecarConfig.localRepository.get() );
             List<File> downloads = Files.walk( downloadDir.toPath() )
                                         .filter( Files::isRegularFile )
                                         .map( Path::toFile )
@@ -154,12 +151,12 @@ public class ArchiveRetrieveService
 
     public boolean decompressArchive()
     {
-        if ( archiveApi.isEmpty() )
+        if ( sidecarConfig.archiveApi.isEmpty() )
         {
             return false;
         }
-        String buildConfigId = System.getProperty( BUILD_CONFIG_ID );
-        final File target = new File( localRepository.orElse( DEFAULT_REPO_PATH ), buildConfigId + ARCHIVE_SUFFIX );
+        final File target = new File( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ),
+                                      getBuildConfigId() + ARCHIVE_SUFFIX );
 
         if ( !retrieveArchive( target ) )
         {
@@ -175,7 +172,7 @@ public class ArchiveRetrieveService
 
     public Optional<File> getLocally( final String path )
     {
-        File download = new File( localRepository.orElse( DEFAULT_REPO_PATH ) + File.separator + path );
+        File download = new File( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ) + File.separator + path );
         if ( !download.exists() )
         {
             return Optional.empty();
@@ -185,14 +182,14 @@ public class ArchiveRetrieveService
 
     private boolean retrieveArchive( final File target )
     {
-        String buildConfigId = System.getProperty( BUILD_CONFIG_ID );
+        String buildConfigId = getBuildConfigId();
         final File dir = target.getParentFile();
         dir.mkdirs();
         final File part = new File( dir, target.getName() + PART_SUFFIX );
 
         final HttpClientContext context = new HttpClientContext();
         context.setCookieStore( new BasicCookieStore() );
-        String path = String.format( "%s/%s", archiveApi.get(), buildConfigId );
+        String path = String.format( "%s/%s", sidecarConfig.archiveApi.get(), buildConfigId );
         final HttpGet request = new HttpGet( path );
         InputStream input = null;
         try
@@ -237,7 +234,6 @@ public class ArchiveRetrieveService
 
     private boolean writeDecompressedFiles( final File target )
     {
-        String buildConfigId = System.getProperty( BUILD_CONFIG_ID );
         FileInputStream fis;
         byte[] buffer = new byte[1024];
         try
@@ -249,7 +245,8 @@ public class ArchiveRetrieveService
             while ( ze != null )
             {
                 String fileName = ze.getName();
-                File newFile = new File( localRepository.orElse( DEFAULT_REPO_PATH ) + File.separator + fileName );
+                File newFile = new File( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ) + File.separator
+                                                         + fileName );
                 logger.debug( "Unzipping to {}", newFile.getAbsolutePath() );
                 new File( newFile.getParent() ).mkdirs();
                 FileOutputStream fos = new FileOutputStream( newFile );
@@ -263,7 +260,7 @@ public class ArchiveRetrieveService
                 zis.closeEntry();
                 ze = zis.getNextEntry();
             }
-            decompressedBuilds.add( buildConfigId );
+            decompressedBuilds.add( getBuildConfigId() );
             zis.closeEntry();
             zis.close();
             fis.close();
@@ -272,7 +269,7 @@ public class ArchiveRetrieveService
         catch ( IOException e )
         {
             e.printStackTrace();
-            logger.error( "Failed to decompress the archive for build config id: " + buildConfigId, e );
+            logger.error( "Failed to decompress the archive for build config id: " + getBuildConfigId(), e );
             return false;
         }
     }
