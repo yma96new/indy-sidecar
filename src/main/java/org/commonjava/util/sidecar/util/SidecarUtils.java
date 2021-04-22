@@ -6,7 +6,7 @@ public class SidecarUtils
 
     private final static String MAVEN_META = "maven-metadata.xml";
 
-    public static boolean doProxy( final String path )
+    public static boolean shouldProxy( final String path )
     {
         return getBuildConfigId() == null || getBuildConfigId().trim().isEmpty() || path.endsWith( MAVEN_META );
     }

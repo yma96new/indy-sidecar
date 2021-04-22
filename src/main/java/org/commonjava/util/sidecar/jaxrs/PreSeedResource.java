@@ -44,7 +44,7 @@ import java.io.InputStream;
 import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
-import static org.commonjava.util.sidecar.util.SidecarUtils.doProxy;
+import static org.commonjava.util.sidecar.util.SidecarUtils.shouldProxy;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
 
 @Path( "/api/folo/track/{id}/maven/{type: (hosted|group|remote)}/{name}" )
@@ -80,7 +80,7 @@ public class PreSeedResource
                               @PathParam( "path" ) String path, final @Context HttpServerRequest request )
                     throws Exception
     {
-        if ( doProxy( path ) )
+        if ( shouldProxy( path ) )
         {
             logger.debug( "Get proxy resource: {}", path );
             return proxyService.doGet( path, type, name, request );
