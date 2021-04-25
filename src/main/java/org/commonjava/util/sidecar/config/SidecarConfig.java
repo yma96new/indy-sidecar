@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2021 Red Hat, Inc. (https://github.com/Commonjava/indy-sidecar)
+ * Copyright (C) 2011-2021 Red Hat, Inc. (https://github.com/Commonjava/indy)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.commonjava.util.sidecar;
+package org.commonjava.util.sidecar.config;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import io.quarkus.arc.config.ConfigProperties;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-@Path("/healthcheck")
-public class HealthResource {
+import java.util.Optional;
 
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
-        return "Pong";
-    }
+@ConfigProperties( prefix = "sidecar" )
+public class SidecarConfig
+{
+    @ConfigProperty( name = "archive-api" )
+    public Optional<String> archiveApi;
+
+    @ConfigProperty( name = "local-repository" )
+    public Optional<String> localRepository;
 }
