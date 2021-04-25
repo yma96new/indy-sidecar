@@ -58,15 +58,6 @@ public class PreSeedResource
     @Inject
     ArchiveRetrieveService archiveService;
 
-    @HEAD
-    @Path( "{path: (.*)}" )
-    public Uni<Response> head( @PathParam( "path" ) String path, final @Context HttpServerRequest request )
-                    throws Exception
-    {
-        logger.debug( "Head resource: {}", path );
-        return proxyService.doHead( path, request );
-    }
-
     @Operation( description = "Retrieve Maven artifact content from historical archive or proxy" )
     @APIResponse( responseCode = "200", description = "Content stream" )
     @APIResponse( responseCode = "404", description = "Content is not available" )
@@ -107,13 +98,13 @@ public class PreSeedResource
         }
     }
 
-    @POST
+    @HEAD
     @Path( "{path: (.*)}" )
-    public Uni<Response> post( @PathParam( "path" ) String path, InputStream is,
-                               final @Context HttpServerRequest request ) throws Exception
+    public Uni<Response> head( @PathParam( "path" ) String path, final @Context HttpServerRequest request )
+                    throws Exception
     {
-        logger.debug( "Post resource: {}", path );
-        return proxyService.doPost( path, is, request );
+        logger.debug( "Head resource: {}", path );
+        return proxyService.doHead( path, request );
     }
 
     @PUT
@@ -124,14 +115,4 @@ public class PreSeedResource
         logger.debug( "Put resource: {}", path );
         return proxyService.doPut( path, is, request );
     }
-
-    @DELETE
-    @Path( "{path: (.*)}" )
-    public Uni<Response> delete( @PathParam( "path" ) String path, final @Context HttpServerRequest request )
-                    throws Exception
-    {
-        logger.debug( "Delete resource: {}", path );
-        return proxyService.doDelete( path, request );
-    }
-
 }
