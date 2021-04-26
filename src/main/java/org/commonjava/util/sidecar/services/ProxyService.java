@@ -48,6 +48,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.commonjava.o11yphant.metrics.RequestContextConstants.EXTERNAL_ID;
 import static org.commonjava.o11yphant.metrics.RequestContextConstants.TRACE_ID;
+import static org.commonjava.util.sidecar.services.ProxyConstants.CONTENT_REST_BASE_PATH;
 import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CONFIG_CHANGE;
 
 @ApplicationScoped
@@ -103,28 +104,32 @@ public class ProxyService
         logger.debug( "Handle event {}, refresh timeout: {}", EVENT_PROXY_CONFIG_CHANGE, timeout );
     }
 
-    @GET
-    public Uni<Response> doHead( String path, HttpServerRequest request ) throws Exception
+    public Uni<Response> doHead( String packageType, String type, String name, String path, HttpServerRequest request )
+                    throws Exception
     {
-        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                (client, service) -> wrapAsyncCall( client.head( p )
-                        .putHeaders( getHeaders( request ) )
-                        .timeout( timeout )
-                        .send() ) ), request );
+        String contentPath = UrlUtils.buildUrl( CONTENT_REST_BASE_PATH, packageType, type, name, path );
+        return doHead( contentPath, request );
     }
 
     @GET
-    public Uni<Response> doGet( String path, String type, String name, HttpServerRequest request ) throws Exception
+    public Uni<Response> doHead( String path, HttpServerRequest request ) throws Exception
     {
-        String contentPath = UrlUtils.buildUrl( "/api/content/", "maven", type, name, path );
+        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
+                        client.head( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).send() ) ), request );
+    }
+
+    public Uni<Response> doGet( String packageType, String type, String name, String path, HttpServerRequest request )
+                    throws Exception
+    {
+        String contentPath = UrlUtils.buildUrl( CONTENT_REST_BASE_PATH, packageType, type, name, path );
         return doGet( contentPath, request );
     }
 
     @GET
     public Uni<Response> doGet( String path, HttpServerRequest request ) throws Exception
     {
-        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                (client, service) ->  wrapAsyncCall( client.get( p )
+        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
+                        client.get( p )
                                 .putHeaders( getHeaders( request ) )
                                 .timeout( timeout )
                                 .send()) ), request );
@@ -135,11 +140,22 @@ public class ProxyService
     {
         Buffer buf = Buffer.buffer( IOUtils.toByteArray( is ) );
 
-        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                (client, service) -> wrapAsyncCall( client.post( p )
-                        .putHeaders( getHeaders( request ) )
-                        .timeout( timeout )
-                        .sendBuffer( buf ) ) ), request );
+        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
+                        client.post( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).sendBuffer( buf ) ) ),
+                                 request );
+    }
+
+    public Uni<Response> doPut( String packageType, String type, String name, String path, HttpServerRequest request )
+                    throws Exception
+    {
+        String contentPath = UrlUtils.buildUrl( CONTENT_REST_BASE_PATH, packageType, type, name, path );
+        return normalizePathAnd( contentPath, p -> classifier.classifyAnd( p, request,
+                                                                           ( client, service ) -> wrapAsyncCall(
+                                                                                           client.put( p )
+                                                                                                 .putHeaders( getHeaders(
+                                                                                                                 request ) )
+                                                                                                 .timeout( timeout )
+                                                                                                 .send() ) ), request );
     }
 
     @GET
@@ -147,11 +163,9 @@ public class ProxyService
     {
         Buffer buf = Buffer.buffer( IOUtils.toByteArray( is ) );
 
-        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                (client, service) -> wrapAsyncCall( client.put( p )
-                        .putHeaders( getHeaders( request ) )
-                        .timeout( timeout )
-                        .sendBuffer( buf ) ) ), request );
+        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
+                        client.put( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).sendBuffer( buf ) ) ),
+                                 request );
     }
 
     @GET

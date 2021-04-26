@@ -19,4 +19,8 @@ public class ProxyConstants
 {
     // Vert.x event types
     public static final String EVENT_PROXY_CONFIG_CHANGE = "proxy-config-change";
+
+    public static final String PKG_TYPE_MAVEN = "maven";
+
+    public static final String CONTENT_REST_BASE_PATH = "/api/content";
 }
