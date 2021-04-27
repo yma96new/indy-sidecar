@@ -30,13 +30,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.File;
@@ -44,6 +43,7 @@ import java.io.InputStream;
 import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static org.commonjava.util.sidecar.services.ProxyConstants.PKG_TYPE_MAVEN;
 import static org.commonjava.util.sidecar.util.SidecarUtils.shouldProxy;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
 
@@ -57,15 +57,6 @@ public class PreSeedResource
 
     @Inject
     ArchiveRetrieveService archiveService;
-
-    @HEAD
-    @Path( "{path: (.*)}" )
-    public Uni<Response> head( @PathParam( "path" ) String path, final @Context HttpServerRequest request )
-                    throws Exception
-    {
-        logger.debug( "Head resource: {}", path );
-        return proxyService.doHead( path, request );
-    }
 
     @Operation( description = "Retrieve Maven artifact content from historical archive or proxy" )
     @APIResponse( responseCode = "200", description = "Content stream" )
@@ -82,15 +73,15 @@ public class PreSeedResource
     {
         if ( shouldProxy( path ) )
         {
-            logger.debug( "Get proxy resource: {}", path );
-            return proxyService.doGet( path, type, name, request );
+            logger.debug( "Get proxy resource for folo request: {}", path );
+            return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
         }
         if ( !archiveService.isDecompressed() )
         {
             boolean success = archiveService.decompressArchive();
             if ( !success )
             {
-                return proxyService.doGet( path, type, name, request );
+                return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
             }
         }
         Optional<File> download = archiveService.getLocally( path );
@@ -103,35 +94,39 @@ public class PreSeedResource
         }
         else
         {
-            return proxyService.doGet( path, type, name, request );
+            return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
         }
     }
 
-    @POST
+    @Operation( description = "Store artifact content under the given artifact store (type/name) and path." )
+    @APIResponse( responseCode = "404", description = "Content is not available" )
+    @APIResponse( responseCode = "200", description = "Header metadata for content (or rendered listing when path ends with '/index.html' or '/'" )
+    @HEAD
     @Path( "{path: (.*)}" )
-    public Uni<Response> post( @PathParam( "path" ) String path, InputStream is,
+    public Uni<Response> head( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
+                               @Parameter( in = PATH, schema = @Schema( enumeration = { "hosted", "group",
+                                               "remote" } ), required = true ) @PathParam( "type" ) final String type,
+                               @Parameter( in = PATH, required = true ) @PathParam( "name" ) final String name,
+                               @PathParam( "path" ) String path, @QueryParam( "cache-only" ) final Boolean cacheOnly,
                                final @Context HttpServerRequest request ) throws Exception
     {
-        logger.debug( "Post resource: {}", path );
-        return proxyService.doPost( path, is, request );
+        logger.debug( "Head proxy resource for folo request: {}", path );
+        return proxyService.doHead( PKG_TYPE_MAVEN, type, name, path, request );
     }
 
+    @Operation( description = "Store artifact content under the given artifact store (type/name) and path." )
+    @APIResponse( responseCode = "201", description = "Content was stored successfully" )
+    @APIResponse( responseCode = "400", description = "No appropriate storage location was found in the specified store" )
     @PUT
     @Path( "{path: (.*)}" )
-    public Uni<Response> put( @PathParam( "path" ) String path, InputStream is,
-                              final @Context HttpServerRequest request ) throws Exception
-    {
-        logger.debug( "Put resource: {}", path );
-        return proxyService.doPut( path, is, request );
-    }
-
-    @DELETE
-    @Path( "{path: (.*)}" )
-    public Uni<Response> delete( @PathParam( "path" ) String path, final @Context HttpServerRequest request )
+    public Uni<Response> put( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
+                              @Parameter( in = PATH, schema = @Schema( enumeration = { "hosted", "group",
+                                              "remote" } ), required = true ) @PathParam( "type" ) final String type,
+                              @Parameter( in = PATH, required = true ) @PathParam( "name" ) final String name,
+                              @PathParam( "path" ) String path, final @Context HttpServerRequest request )
                     throws Exception
     {
-        logger.debug( "Delete resource: {}", path );
-        return proxyService.doDelete( path, request );
+        logger.debug( "Put proxy resource for folo request: {}", path );
+        return proxyService.doPut( PKG_TYPE_MAVEN, type, name, path, request );
     }
-
 }
