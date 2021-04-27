@@ -111,7 +111,6 @@ public class ProxyService
         return doHead( contentPath, request );
     }
 
-    @GET
     public Uni<Response> doHead( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
@@ -125,7 +124,6 @@ public class ProxyService
         return doGet( contentPath, request );
     }
 
-    @GET
     public Uni<Response> doGet( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
@@ -135,7 +133,6 @@ public class ProxyService
                                 .send()) ), request );
     }
 
-    @GET
     public Uni<Response> doPost( String path, InputStream is, HttpServerRequest request ) throws Exception
     {
         Buffer buf = Buffer.buffer( IOUtils.toByteArray( is ) );
@@ -158,7 +155,6 @@ public class ProxyService
                                                                                                  .send() ) ), request );
     }
 
-    @GET
     public Uni<Response> doPut( String path, InputStream is, HttpServerRequest request ) throws Exception
     {
         Buffer buf = Buffer.buffer( IOUtils.toByteArray( is ) );
@@ -168,7 +164,6 @@ public class ProxyService
                                  request );
     }
 
-    @GET
     public Uni<Response> doDelete( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
