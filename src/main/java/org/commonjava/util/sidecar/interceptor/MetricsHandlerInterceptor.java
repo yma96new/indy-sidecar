@@ -16,6 +16,7 @@
 package org.commonjava.util.sidecar.interceptor;
 
 import io.honeycomb.beeline.tracing.Span;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import org.commonjava.util.sidecar.config.SidecarHoneycombConfiguration;
@@ -35,6 +36,7 @@ import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.SERVICE;
 
 @Interceptor
 @MetricsHandler
+@RegisterForReflection
 public class MetricsHandlerInterceptor
 {
 
