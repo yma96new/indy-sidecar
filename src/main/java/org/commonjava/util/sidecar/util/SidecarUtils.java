@@ -13,6 +13,6 @@ public class SidecarUtils
 
     public static String getBuildConfigId()
     {
-        return System.getProperty( BUILD_CONFIG_ID );
+        return System.getenv( BUILD_CONFIG_ID );
     }
 }
