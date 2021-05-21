@@ -17,7 +17,9 @@ package org.commonjava.util.sidecar.jaxrs;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.apache.commons.io.FileUtils;
+import org.commonjava.util.sidecar.config.SidecarConfig;
 import org.commonjava.util.sidecar.services.ArchiveRetrieveService;
 import org.commonjava.util.sidecar.services.ProxyService;
 import org.commonjava.util.sidecar.util.TransferStreamingOutput;
@@ -43,6 +45,7 @@ import java.io.InputStream;
 import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static org.commonjava.util.sidecar.services.ProxyConstants.ARCHIVE_DECOMPRESS_COMPLETE;
 import static org.commonjava.util.sidecar.services.ProxyConstants.PKG_TYPE_MAVEN;
 import static org.commonjava.util.sidecar.util.SidecarUtils.shouldProxy;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
@@ -50,10 +53,18 @@ import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PAT
 @Path( "/api/folo/track/{id}/maven/{type: (hosted|group|remote)}/{name}" )
 public class PreSeedResource
 {
+    private static final String DEFAULT_REPO_PATH = "download";
+
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
+    EventBus bus;
+
+    @Inject
     ProxyService proxyService;
+
+    @Inject
+    SidecarConfig sidecarConfig;
 
     @Inject
     ArchiveRetrieveService archiveService;
@@ -79,6 +90,7 @@ public class PreSeedResource
         if ( !archiveService.isDecompressed() )
         {
             boolean success = archiveService.decompressArchive();
+            bus.publish(ARCHIVE_DECOMPRESS_COMPLETE, sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ));
             if ( !success )
             {
                 return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
