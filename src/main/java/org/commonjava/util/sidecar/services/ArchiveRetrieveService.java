@@ -50,8 +50,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
-
 @ApplicationScoped
 public class ArchiveRetrieveService
 {
@@ -64,7 +62,9 @@ public class ArchiveRetrieveService
 
     private final static int SOCKET_TIMEOUT = 30 * 60 * 1000; // 30m
 
-    private final static List<String> decompressedBuilds = new ArrayList<>();
+    private final static String BUILD_CONFIG_ID = "build.config.id";
+
+    private final static String MAVEN_META = "maven-metadata.xml";
 
     private final String PART_SUFFIX = ".part";
 
@@ -73,6 +73,8 @@ public class ArchiveRetrieveService
     private final String DEFAULT_REPO_PATH = "download";
 
     private CloseableHttpClient client;
+
+    protected final static List<String> decompressedBuilds = new ArrayList<>();
 
     @Inject
     SidecarConfig sidecarConfig;
@@ -178,6 +180,16 @@ public class ArchiveRetrieveService
             return Optional.empty();
         }
         return Optional.of( download );
+    }
+
+    public boolean shouldProxy( final String path )
+    {
+        return getBuildConfigId() == null || getBuildConfigId().trim().isEmpty() || path.endsWith( MAVEN_META );
+    }
+
+    public String getBuildConfigId()
+    {
+        return System.getenv( BUILD_CONFIG_ID );
     }
 
     private boolean retrieveArchive( final File target )

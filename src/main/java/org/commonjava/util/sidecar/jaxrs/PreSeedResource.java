@@ -47,7 +47,6 @@ import java.util.Optional;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static org.commonjava.util.sidecar.services.ProxyConstants.ARCHIVE_DECOMPRESS_COMPLETE;
 import static org.commonjava.util.sidecar.services.ProxyConstants.PKG_TYPE_MAVEN;
-import static org.commonjava.util.sidecar.util.SidecarUtils.shouldProxy;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
 
 @Path( "/api/folo/track/{id}/maven/{type: (hosted|group|remote)}/{name}" )
@@ -82,7 +81,7 @@ public class PreSeedResource
                               @PathParam( "path" ) String path, final @Context HttpServerRequest request )
                     throws Exception
     {
-        if ( shouldProxy( path ) )
+        if ( archiveService.shouldProxy( path ) )
         {
             logger.debug( "Get proxy resource for folo request: {}", path );
             return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
