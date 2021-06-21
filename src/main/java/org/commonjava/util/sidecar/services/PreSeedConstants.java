@@ -24,7 +24,7 @@ public class PreSeedConstants
 
     public static final String CONTENT_REST_BASE_PATH = "/api/content";
 
-    public static final String DEFAULT_REPO_PATH = System.getProperty( "user.home" ) + "/.m2/preSeedRepo";
+    public static final String DEFAULT_REPO_PATH = System.getProperty( "user.home" ) + "/preSeedRepo";
 
     public static final String FOLO_BUILD = "folo-build";
 
