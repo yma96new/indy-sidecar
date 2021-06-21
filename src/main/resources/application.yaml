@@ -35,4 +35,4 @@ honeycomb:
 
 sidecar:
     archive-api: http://localhost:8081/api/archive
-    local-repository: ${user.home}/test/repository
+    local-repository: ${user.home}/.m2/preSeedRepo
