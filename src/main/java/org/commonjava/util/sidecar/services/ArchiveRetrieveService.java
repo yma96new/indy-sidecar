@@ -43,12 +43,13 @@ import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO_PATH;
 
 @ApplicationScoped
 public class ArchiveRetrieveService
@@ -70,19 +71,10 @@ public class ArchiveRetrieveService
 
     private final String ARCHIVE_SUFFIX = ".zip";
 
-    private final String DEFAULT_REPO_PATH = "download";
-
     private CloseableHttpClient client;
-
-    protected final static List<String> decompressedBuilds = new ArrayList<>();
 
     @Inject
     SidecarConfig sidecarConfig;
-
-    public boolean isDecompressed()
-    {
-        return decompressedBuilds.contains( getBuildConfigId() );
-    }
 
     @PostConstruct
     public void init()
@@ -151,16 +143,16 @@ public class ArchiveRetrieveService
         }
     }
 
-    public boolean decompressArchive()
+    public boolean decompressArchive( final String buildConfigId )
     {
         if ( sidecarConfig.archiveApi.isEmpty() )
         {
             return false;
         }
         final File target = new File( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ),
-                                      getBuildConfigId() + ARCHIVE_SUFFIX );
+                                      buildConfigId + ARCHIVE_SUFFIX );
 
-        if ( !retrieveArchive( target ) )
+        if ( !retrieveArchive( target, buildConfigId ) )
         {
             return false;
         }
@@ -169,7 +161,7 @@ public class ArchiveRetrieveService
             return false;
         }
 
-        return writeDecompressedFiles( target );
+        return writeDecompressedFiles( target, buildConfigId );
     }
 
     public Optional<File> getLocally( final String path )
@@ -192,9 +184,8 @@ public class ArchiveRetrieveService
         return System.getenv( BUILD_CONFIG_ID );
     }
 
-    private boolean retrieveArchive( final File target )
+    private boolean retrieveArchive( final File target, final String buildConfigId )
     {
-        String buildConfigId = getBuildConfigId();
         final File dir = target.getParentFile();
         dir.mkdirs();
         final File part = new File( dir, target.getName() + PART_SUFFIX );
@@ -244,7 +235,7 @@ public class ArchiveRetrieveService
         }
     }
 
-    private boolean writeDecompressedFiles( final File target )
+    private boolean writeDecompressedFiles( final File target, final String buildConfigId )
     {
         FileInputStream fis;
         byte[] buffer = new byte[1024];
@@ -272,7 +263,6 @@ public class ArchiveRetrieveService
                 zis.closeEntry();
                 ze = zis.getNextEntry();
             }
-            decompressedBuilds.add( getBuildConfigId() );
             zis.closeEntry();
             zis.close();
             fis.close();
@@ -281,7 +271,7 @@ public class ArchiveRetrieveService
         catch ( IOException e )
         {
             e.printStackTrace();
-            logger.error( "Failed to decompress the archive for build config id: " + getBuildConfigId(), e );
+            logger.error( "Failed to decompress the archive for build config id: " + buildConfigId, e );
             return false;
         }
     }

@@ -30,8 +30,30 @@ public class MavenDownloadFromArchiveTest
 {
 
     @Test
+    public void testFailedPreSeedArchive()
+    {
+        given().when()
+               .get("/api/preSeed/archive/1001")
+               .then()
+               .statusCode( NOT_FOUND.getStatusCode() );
+    }
+
+    @Test
+    public void testSuccessfulPreSeedArchive()
+    {
+        given().when()
+               .get("/api/preSeed/archive/1000")
+               .then()
+               .statusCode( OK.getStatusCode() );
+    }
+
+    @Test
     public void testMetadataDownload()
     {
+        given().when()
+               .get("/api/preSeed/archive/1000")
+               .then()
+               .statusCode( OK.getStatusCode() );
         given().when()
                .get( "/api/folo/track/2021/maven/group/repo1/org/apache/maven/maven-core/3.0/maven-metadata.xml" )
                .then()
@@ -39,17 +61,12 @@ public class MavenDownloadFromArchiveTest
     }
 
     @Test
-    public void testIsDecompressed()
-    {
-        given().when()
-               .get( "/api/folo/track/2021/maven/group/repo1/org/apache/maven/maven-core/3.1/maven-core-3.1.jar" )
-               .then()
-               .statusCode( OK.getStatusCode() );
-    }
-
-    @Test
     public void testDownloadSuccess()
     {
+        given().when()
+               .get("/api/preSeed/archive/1000")
+               .then()
+               .statusCode( OK.getStatusCode() );
         given().when()
                .get( "/api/folo/track/2021/maven/group/repo1/org/apache/maven/maven-core/3.0/maven-core-3.0.jar" )
                .then()
@@ -59,6 +76,10 @@ public class MavenDownloadFromArchiveTest
     @Test
     public void testDownloadNotFound()
     {
+        given().when()
+               .get("/api/preSeed/archive/1000")
+               .then()
+               .statusCode( OK.getStatusCode() );
         given().when()
                .get( "/api/folo/track/2021/maven/group/repo1/org/apache/maven/maven-core/3.2/maven-core-3.2.jar" )
                .then()

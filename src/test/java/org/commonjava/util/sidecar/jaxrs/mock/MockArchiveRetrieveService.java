@@ -31,10 +31,13 @@ import static org.commonjava.util.sidecar.util.TestUtil.getBytes;
 public class MockArchiveRetrieveService
                 extends ArchiveRetrieveService
 {
-
     @Override
-    public boolean decompressArchive()
+    public boolean decompressArchive( String buildConfigId )
     {
+        if ( buildConfigId.equals( "1001" ) )
+        {
+            return false;
+        }
         try
         {
             String home = System.getProperty( "user.home" );
@@ -51,23 +54,6 @@ public class MockArchiveRetrieveService
             e.printStackTrace();
         }
         return true;
-    }
-
-    @Override
-    public boolean isDecompressed()
-    {
-        String path = "/org/apache/maven/maven-core/3.1/maven-core-3.1.jar";
-        File jar = new File( System.getProperty( "user.home" ) + "/test/repository" + path );
-        new File( jar.getParent() ).mkdirs();
-        try
-        {
-            FileUtils.write( jar, new String( getBytes( SIZE_50K ) ), "UTF-8" );
-        }
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-        }
-        return super.isDecompressed();
     }
 
     @Override

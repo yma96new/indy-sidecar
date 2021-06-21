@@ -41,7 +41,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CONFIG_CHANGE;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.EVENT_PROXY_CONFIG_CHANGE;
 
 @Startup
 @ApplicationScoped

@@ -15,9 +15,9 @@
  */
 package org.commonjava.util.sidecar.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkus.vertx.ConsumeEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.commonjava.util.sidecar.model.AccessChannel;
 import org.commonjava.util.sidecar.model.StoreEffect;
 import org.commonjava.util.sidecar.model.TrackedContent;
@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.commonjava.util.sidecar.services.ProxyConstants.ARCHIVE_DECOMPRESS_COMPLETE;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
 import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
 
 @RegisterForReflection
@@ -63,7 +63,7 @@ public class ReportService
     }
 
 
-    @ConsumeEvent(value = ARCHIVE_DECOMPRESS_COMPLETE)
+    @ConsumeEvent(value = FOLO_BUILD)
     public void readReport(String path)
     {
         HistoricalContentDTO content;

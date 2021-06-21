@@ -28,8 +28,6 @@ public class BuildConfigIdEnvMock
     @Override
     public String getBuildConfigId()
     {
-        String buildConfigId = "2000";
-        decompressedBuilds.add( buildConfigId );
-        return buildConfigId;
+        return "2000";
     }
 }
