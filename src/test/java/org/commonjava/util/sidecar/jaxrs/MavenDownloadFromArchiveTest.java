@@ -39,15 +39,6 @@ public class MavenDownloadFromArchiveTest
     }
 
     @Test
-    public void testIsDecompressed()
-    {
-        given().when()
-               .get( "/api/folo/track/2021/maven/group/repo1/org/apache/maven/maven-core/3.1/maven-core-3.1.jar" )
-               .then()
-               .statusCode( OK.getStatusCode() );
-    }
-
-    @Test
     public void testDownloadSuccess()
     {
         given().when()

@@ -15,12 +15,13 @@
  */
 package org.commonjava.util.sidecar.services;
 
-public class ProxyConstants
+public class PreSeedConstants
 {
-    // Vert.x event types
-    public static final String ARCHIVE_DECOMPRESS_COMPLETE = "archive-decompressed";
-
     public static final String PKG_TYPE_MAVEN = "maven";
 
     public static final String CONTENT_REST_BASE_PATH = "/api/content";
+
+    public static final String DEFAULT_REPO_PATH = System.getProperty( "user.home" ) + "/preSeedRepo";
+
+    public static final String FOLO_BUILD = "folo-build";
 }

@@ -24,16 +24,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO_PATH;
+
 public class SidecarFunctionProfile
                 implements QuarkusTestProfile
 {
-    public static final String LOCAL_REPO = System.getProperty( "user.home" ) + "/test/repository";
 
     @Override
     public Map<String, String> getConfigOverrides()
     {
         Map<String, String> configs = new HashMap<>();
-        configs.put( "sidecar.local-repository", LOCAL_REPO );
+        configs.put( "sidecar.local-repository", DEFAULT_REPO_PATH );
         return configs;
     }
 

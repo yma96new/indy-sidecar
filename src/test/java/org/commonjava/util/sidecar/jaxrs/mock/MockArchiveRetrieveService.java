@@ -23,6 +23,7 @@ import javax.enterprise.inject.Alternative;
 import java.io.File;
 import java.io.IOException;
 
+import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO_PATH;
 import static org.commonjava.util.sidecar.util.TestUtil.SIZE_50K;
 import static org.commonjava.util.sidecar.util.TestUtil.getBytes;
 
@@ -31,18 +32,17 @@ import static org.commonjava.util.sidecar.util.TestUtil.getBytes;
 public class MockArchiveRetrieveService
                 extends ArchiveRetrieveService
 {
-
     @Override
-    public boolean decompressArchive()
+    public void init()
     {
+        super.init();
         try
         {
-            String home = System.getProperty( "user.home" );
-            File tracked = new File( home + "/test/repository", "1000" );
+            File tracked = new File( DEFAULT_REPO_PATH, "1000" );
             FileUtils.write( tracked, new String( getBytes( SIZE_50K ) ), "UTF-8" );
 
             String path = "/org/apache/maven/maven-core/3.0/maven-core-3.0.jar";
-            File jar = new File( home + "/test/repository" + path );
+            File jar = new File( DEFAULT_REPO_PATH + path );
             new File( jar.getParent() ).mkdirs();
             FileUtils.write( jar, new String( getBytes( SIZE_50K ) ), "UTF-8" );
         }
@@ -50,24 +50,6 @@ public class MockArchiveRetrieveService
         {
             e.printStackTrace();
         }
-        return true;
-    }
-
-    @Override
-    public boolean isDecompressed()
-    {
-        String path = "/org/apache/maven/maven-core/3.1/maven-core-3.1.jar";
-        File jar = new File( System.getProperty( "user.home" ) + "/test/repository" + path );
-        new File( jar.getParent() ).mkdirs();
-        try
-        {
-            FileUtils.write( jar, new String( getBytes( SIZE_50K ) ), "UTF-8" );
-        }
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-        }
-        return super.isDecompressed();
     }
 
     @Override

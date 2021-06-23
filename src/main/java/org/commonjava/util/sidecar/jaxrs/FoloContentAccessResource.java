@@ -45,15 +45,12 @@ import java.io.InputStream;
 import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
-import static org.commonjava.util.sidecar.services.ProxyConstants.ARCHIVE_DECOMPRESS_COMPLETE;
-import static org.commonjava.util.sidecar.services.ProxyConstants.PKG_TYPE_MAVEN;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.PKG_TYPE_MAVEN;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
 
 @Path( "/api/folo/track/{id}/maven/{type: (hosted|group|remote)}/{name}" )
-public class PreSeedResource
+public class FoloContentAccessResource
 {
-    private static final String DEFAULT_REPO_PATH = "download";
-
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
@@ -86,15 +83,10 @@ public class PreSeedResource
             logger.debug( "Get proxy resource for folo request: {}", path );
             return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
         }
-        if ( !archiveService.isDecompressed() )
-        {
-            boolean success = archiveService.decompressArchive();
-            bus.publish(ARCHIVE_DECOMPRESS_COMPLETE, sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ));
-            if ( !success )
-            {
-                return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
-            }
-        }
+
+        // bus.publish( FOLO_BUILD, sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ) );
+        // This needs to tweak/reconsider in MMENG-1728
+
         Optional<File> download = archiveService.getLocally( path );
         if ( download.isPresent() )
         {

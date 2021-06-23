@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.commonjava.util.sidecar.ftest.profile.SidecarFunctionProfile.LOCAL_REPO;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO_PATH;
 import static org.commonjava.util.sidecar.util.TestUtil.SIZE_50K;
 import static org.commonjava.util.sidecar.util.TestUtil.getBytes;
 
@@ -48,10 +48,10 @@ public class AbstractSidecarFuncTest
     public void prepare() throws IOException
     {
         deleteFiles();
-        File tracked = new File( LOCAL_REPO, SUCCESS_BUILD );
+        File tracked = new File( DEFAULT_REPO_PATH, SUCCESS_BUILD );
         FileUtils.write( tracked, new String( TRACKED_CONTENT.getBytes() ), "UTF-8" );
 
-        File jar = new File( LOCAL_REPO + REPO, PATH );
+        File jar = new File( DEFAULT_REPO_PATH + REPO, PATH );
         FileUtils.write( jar, new String( getBytes( SIZE_50K ) ), "UTF-8" );
     }
 
@@ -64,8 +64,8 @@ public class AbstractSidecarFuncTest
     private void deleteFiles()
     {
         List<File> files = new ArrayList<>();
-        files.add( new File( LOCAL_REPO, SUCCESS_BUILD ) );
-        files.add( new File( LOCAL_REPO + REPO, PATH ) );
+        files.add( new File( DEFAULT_REPO_PATH, SUCCESS_BUILD ) );
+        files.add( new File( DEFAULT_REPO_PATH + REPO, PATH ) );
         for ( File target : files )
         {
             if ( target.exists() )

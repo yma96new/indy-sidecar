@@ -26,7 +26,12 @@ import org.apache.commons.io.IOUtils;
 import org.commonjava.util.sidecar.config.ProxyConfiguration;
 import org.commonjava.util.sidecar.interceptor.ExceptionHandler;
 import org.commonjava.util.sidecar.interceptor.MetricsHandler;
-import org.commonjava.util.sidecar.model.*;
+import org.commonjava.util.sidecar.model.AccessChannel;
+import org.commonjava.util.sidecar.model.StoreEffect;
+import org.commonjava.util.sidecar.model.StoreKey;
+import org.commonjava.util.sidecar.model.StoreType;
+import org.commonjava.util.sidecar.model.TrackedContentEntry;
+import org.commonjava.util.sidecar.model.TrackingKey;
 import org.commonjava.util.sidecar.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +56,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.commonjava.o11yphant.metrics.RequestContextConstants.EXTERNAL_ID;
 import static org.commonjava.o11yphant.metrics.RequestContextConstants.TRACE_ID;
-import static org.commonjava.util.sidecar.services.ProxyConstants.CONTENT_REST_BASE_PATH;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.CONTENT_REST_BASE_PATH;
 import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
 
 @ApplicationScoped
