@@ -18,11 +18,7 @@ package org.commonjava.util.sidecar.services;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
-import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
@@ -36,18 +32,13 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO_PATH;
 
@@ -66,10 +57,6 @@ public class ArchiveRetrieveService
     private final static String BUILD_CONFIG_ID = "build.config.id";
 
     private final static String MAVEN_META = "maven-metadata.xml";
-
-    private final String PART_SUFFIX = ".part";
-
-    private final String ARCHIVE_SUFFIX = ".zip";
 
     private CloseableHttpClient client;
 
@@ -143,27 +130,6 @@ public class ArchiveRetrieveService
         }
     }
 
-    public boolean decompressArchive( final String buildConfigId )
-    {
-        if ( sidecarConfig.archiveApi.isEmpty() )
-        {
-            return false;
-        }
-        final File target = new File( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ),
-                                      buildConfigId + ARCHIVE_SUFFIX );
-
-        if ( !retrieveArchive( target, buildConfigId ) )
-        {
-            return false;
-        }
-        if ( target.exists() && target.length() <= 0 )
-        {
-            return false;
-        }
-
-        return writeDecompressedFiles( target, buildConfigId );
-    }
-
     public Optional<File> getLocally( final String path )
     {
         File download = new File( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ) + File.separator + path );
@@ -182,97 +148,5 @@ public class ArchiveRetrieveService
     public String getBuildConfigId()
     {
         return System.getenv( BUILD_CONFIG_ID );
-    }
-
-    private boolean retrieveArchive( final File target, final String buildConfigId )
-    {
-        final File dir = target.getParentFile();
-        dir.mkdirs();
-        final File part = new File( dir, target.getName() + PART_SUFFIX );
-
-        final HttpClientContext context = new HttpClientContext();
-        context.setCookieStore( new BasicCookieStore() );
-        String path = String.format( "%s/%s", sidecarConfig.archiveApi.get(), buildConfigId );
-        final HttpGet request = new HttpGet( path );
-        InputStream input = null;
-        try
-        {
-            CloseableHttpResponse response = client.execute( request, context );
-            int statusCode = response.getStatusLine().getStatusCode();
-            if ( statusCode == 200 )
-            {
-                try (FileOutputStream out = new FileOutputStream( part ))
-                {
-                    input = response.getEntity().getContent();
-                    IOUtils.copy( input, out );
-                }
-                part.renameTo( target );
-                return true;
-            }
-            // first build case
-            else if ( statusCode == 404 )
-            {
-                logger.info( "Not Found archive for build config id: {}", buildConfigId );
-                return false;
-            }
-            else
-            {
-                logger.error( "Error when getting the archive for build config id: {}", buildConfigId );
-                return false;
-            }
-        }
-        catch ( final Exception e )
-        {
-            e.printStackTrace();
-            logger.error( "Failed to download archive for build config id: {}", buildConfigId );
-            return false;
-        }
-        finally
-        {
-            request.releaseConnection();
-            request.reset();
-            IOUtils.closeQuietly( input, null );
-        }
-    }
-
-    private boolean writeDecompressedFiles( final File target, final String buildConfigId )
-    {
-        FileInputStream fis;
-        byte[] buffer = new byte[1024];
-        try
-        {
-            fis = new FileInputStream( target );
-            ZipInputStream zis = new ZipInputStream( fis );
-            ZipEntry ze = zis.getNextEntry();
-
-            while ( ze != null )
-            {
-                String fileName = ze.getName();
-                File newFile = new File( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ) + File.separator
-                                                         + fileName );
-                logger.debug( "Unzipping to {}", newFile.getAbsolutePath() );
-                new File( newFile.getParent() ).mkdirs();
-                FileOutputStream fos = new FileOutputStream( newFile );
-
-                int len;
-                while ( ( len = zis.read( buffer ) ) > 0 )
-                {
-                    fos.write( buffer, 0, len );
-                }
-                fos.close();
-                zis.closeEntry();
-                ze = zis.getNextEntry();
-            }
-            zis.closeEntry();
-            zis.close();
-            fis.close();
-            return true;
-        }
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-            logger.error( "Failed to decompress the archive for build config id: " + buildConfigId, e );
-            return false;
-        }
     }
 }

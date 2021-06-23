@@ -33,12 +33,9 @@ public class MockArchiveRetrieveService
                 extends ArchiveRetrieveService
 {
     @Override
-    public boolean decompressArchive( String buildConfigId )
+    public void init()
     {
-        if ( buildConfigId.equals( "1001" ) )
-        {
-            return false;
-        }
+        super.init();
         try
         {
             File tracked = new File( DEFAULT_REPO_PATH, "1000" );
@@ -53,7 +50,6 @@ public class MockArchiveRetrieveService
         {
             e.printStackTrace();
         }
-        return true;
     }
 
     @Override
