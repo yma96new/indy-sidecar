@@ -57,7 +57,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.commonjava.o11yphant.metrics.RequestContextConstants.EXTERNAL_ID;
 import static org.commonjava.o11yphant.metrics.RequestContextConstants.TRACE_ID;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.CONTENT_REST_BASE_PATH;
-import static org.commonjava.util.sidecar.services.PreSeedConstants.EVENT_PROXY_CONFIG_CHANGE;
 import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
 
 @ApplicationScoped
@@ -107,13 +106,6 @@ public class ProxyService
             }
         }
         return t;
-    }
-
-    @ConsumeEvent( value = EVENT_PROXY_CONFIG_CHANGE )
-    void handleConfigChange( String message )
-    {
-        timeout = readTimeout();
-        logger.debug( "Handle event {}, refresh timeout: {}", EVENT_PROXY_CONFIG_CHANGE, timeout );
     }
 
     public Uni<Response> doHead( String packageType, String type, String name, String path, HttpServerRequest request )

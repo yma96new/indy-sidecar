@@ -41,7 +41,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.commonjava.util.sidecar.services.PreSeedConstants.EVENT_PROXY_CONFIG_CHANGE;
 
 @Startup
 @ApplicationScoped
@@ -153,11 +152,6 @@ public class ProxyConfiguration
             if ( parsed.services != null )
             {
                 parsed.services.forEach( this::overrideIfPresent );
-            }
-
-            if ( md5Hex != null )
-            {
-                bus.publish( EVENT_PROXY_CONFIG_CHANGE, "" );
             }
 
             md5Hex = md5;
