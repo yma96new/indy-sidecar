@@ -45,6 +45,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
@@ -67,6 +69,8 @@ public class ProxyService
     public final static String HEADER_PROXY_TRACE_ID = "Proxy-Trace-Id";
 
     private final Logger logger = LoggerFactory.getLogger( getClass() );
+
+    private final String PROXY_ORIGIN = "proxy-origin";
 
     private long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis( 30 ); // default 30 minutes
 
@@ -342,6 +346,17 @@ public class ProxyService
         io.vertx.mutiny.core.MultiMap ret = io.vertx.mutiny.core.MultiMap.newInstance( headers )
                 .remove( HOST )
                 .add( TRACE_ID, getTraceId( headers ) );
+        try
+        {
+            URL url = new URL( request.absoluteURI() );
+            String protocol = url.getProtocol();
+            String authority = url.getAuthority();
+            ret.add( PROXY_ORIGIN, String.format( "%s://%s", protocol, authority ) );
+        }
+        catch ( MalformedURLException e )
+        {
+            logger.error( "Failed to parse URI", e );
+        }
         logger.trace( "Req headers:\n{}", ret );
         return ret;
     }
