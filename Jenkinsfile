@@ -69,14 +69,14 @@ pipeline {
       steps{
         script{
           checkout([$class      : 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false,
-                    extensions  : [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'galley'], [$class: 'CleanCheckout']],
-                    submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/commonjava/galley']]])
+                    extensions  : [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'indy-sidecar'], [$class: 'CleanCheckout']],
+                    submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/commonjava/indy-sidecar']]])
         }
       }
     }
     stage('build test'){
       steps {
-        dir('galley'){
+        dir('indy-sidecar'){
           sh 'mvn -s /home/jenkins-11-openjdk/.m2/settings.xml clean install'
         }
       }
