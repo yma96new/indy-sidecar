@@ -47,6 +47,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @RegisterForReflection
 public class ProxyConfiguration
 {
+    @Inject
+    SidecarConfig sidecarConfig;
+
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     public static final String USER_DIR = System.getProperty( "user.dir" ); // where the JVM was invoked

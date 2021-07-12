@@ -45,6 +45,7 @@ import java.io.InputStream;
 import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.PKG_TYPE_MAVEN;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
 
@@ -58,9 +59,6 @@ public class FoloContentAccessResource
 
     @Inject
     ProxyService proxyService;
-
-    @Inject
-    SidecarConfig sidecarConfig;
 
     @Inject
     ArchiveRetrieveService archiveService;
@@ -84,15 +82,13 @@ public class FoloContentAccessResource
             return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
         }
 
-        // bus.publish( FOLO_BUILD, sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ) );
-        // This needs to tweak/reconsider in MMENG-1728
-
         Optional<File> download = archiveService.getLocally( path );
         if ( download.isPresent() )
         {
             InputStream inputStream = FileUtils.openInputStream( download.get() );
             final Response.ResponseBuilder builder = Response.ok( new TransferStreamingOutput( inputStream ) );
             logger.debug( "Download path: {} from historical archive.", path );
+            bus.publish(FOLO_BUILD, path);
             return Uni.createFrom().item( builder.build() );
         }
         else
@@ -126,10 +122,10 @@ public class FoloContentAccessResource
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "hosted", "group",
                                               "remote" } ), required = true ) @PathParam( "type" ) final String type,
                               @Parameter( in = PATH, required = true ) @PathParam( "name" ) final String name,
-                              @PathParam( "path" ) String path, final @Context HttpServerRequest request )
+                              @PathParam( "path" ) String path, InputStream is, final @Context HttpServerRequest request )
                     throws Exception
     {
         logger.debug( "Put proxy resource for folo request: {}", path );
-        return proxyService.doPut( PKG_TYPE_MAVEN, type, name, path, request );
+        return proxyService.doPut( PKG_TYPE_MAVEN, type, name, path, is, request );
     }
 }

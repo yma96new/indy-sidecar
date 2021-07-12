@@ -16,8 +16,12 @@
 package org.commonjava.util.sidecar.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.runtime.annotations.RegisterForReflection;
+import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
+import org.commonjava.util.sidecar.config.SidecarConfig;
 import org.commonjava.util.sidecar.model.AccessChannel;
 import org.commonjava.util.sidecar.model.StoreEffect;
 import org.commonjava.util.sidecar.model.TrackedContent;
@@ -31,27 +35,42 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 
+import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO_PATH;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
 import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
 
-@RegisterForReflection
+@Startup
 @ApplicationScoped
 public class ReportService
 {
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
-    private TrackedContent trackedContent;
+    private TrackedContent trackedContent = new TrackedContent();
+
+    private final HashMap<String,HistoricalEntryDTO> historicalContentMap = new HashMap<>();
 
     @Inject
     ObjectMapper objectMapper;
 
+    @Inject
+    SidecarConfig sidecarConfig;
+
+    @Inject
+    Classifier classifier;
+
+    @Inject
+    ProxyService proxyService;
+
     @PostConstruct
     void init(){
-        this.trackedContent = new TrackedContent();
+        loadReport( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ) );
     }
 
     public void appendUpload(TrackedContentEntry upload){
@@ -62,36 +81,66 @@ public class ReportService
         this.trackedContent.appendDownload(download);
     }
 
-
-    @ConsumeEvent(value = FOLO_BUILD)
-    public void readReport(String path)
+    public TrackedContent getTrackedContent()
     {
-        HistoricalContentDTO content;
-        Path filePath = Path.of(  path , "" + getBuildConfigId() );
-        logger.info( "Loading build content history:" + filePath );
-        try
-        {
-            String json = Files.readString( filePath );
-            content = objectMapper.readValue( json, HistoricalContentDTO.class );
-            if ( content == null ){
-                logger.error( "Failed to read historical content which is empty." );
-            }
-            else {
-                for ( HistoricalEntryDTO download:content.getDownloads() )
-                {
-                     this.trackedContent.appendDownload( new TrackedContentEntry( new TrackingKey(getBuildConfigId()),
-                                                                                  download.getStoreKey(),
-                                                                                  AccessChannel.NATIVE,
-                                                                                  download.getOriginUrl(), download.getPath(), StoreEffect.DOWNLOAD, download.getSize(),
-                                                                                  download.getMd5(), download.getSha1(), download.getSha256() ));
+        return trackedContent;
+    }
+
+    private void loadReport(String path)
+    {
+        if (getBuildConfigId() != null){
+            HistoricalContentDTO content;
+            Path filePath = Path.of(  path , File.separator, getBuildConfigId() );
+            logger.info( "Loading build content history:" + filePath );
+            try
+            {
+                String json = Files.readString( filePath );
+                content = objectMapper.readValue( json, HistoricalContentDTO.class );
+                if ( content == null ){
+                    logger.warn( "Failed to read historical content which is empty." );
+                }
+                else {
+                    for (HistoricalEntryDTO download:content.getDownloads()){
+                        this.historicalContentMap.put(download.getPath(),download);
+                    }
                 }
             }
+            catch ( IOException e)
+            {
+                logger.error( "convert file " + filePath + " to object failed" );
+            }
         }
-        catch ( IOException e)
-        {
-            logger.error( "convert file " + filePath + " to object failed" );
-        }
+    }
 
+    @ConsumeEvent(value = FOLO_BUILD)
+    private void logFoloDownload(String path)
+    {
+        HistoricalEntryDTO entryDTO = historicalContentMap.get(path);
+        this.trackedContent.appendDownload(new TrackedContentEntry(
+                new TrackingKey(getBuildConfigId()),
+                entryDTO.getStoreKey(),
+                AccessChannel.NATIVE,
+                entryDTO.getOriginUrl(), entryDTO.getPath(), StoreEffect.DOWNLOAD, entryDTO.getSize(),
+                entryDTO.getMd5(), entryDTO.getSha1(), entryDTO.getSha256() ));
+    }
+
+    public Uni<Response> exportReport() throws Exception
+    {
+        //Change here when we decide indy import API
+        String path = "/api/folo/admin/report/import";
+
+        return classifier.classifyAnd( path, HttpMethod.PUT, ( client, service ) ->
+                        proxyService.wrapAsyncCall(
+                                        client.put( path ).sendJsonObject( exportReportJson() ), null ));
+    }
+
+    private JsonObject exportReportJson()
+    {
+        return JsonObject.mapFrom( trackedContent );
+    }
+
+    public void clearReport(){
+        trackedContent = new TrackedContent();
     }
 
 }
