@@ -10,16 +10,19 @@ public class HistoricalContentDTO
     {
     }
 
-    public HistoricalContentDTO( String buildConfigId, HistoricalEntryDTO[] downloads ) {
+    public HistoricalContentDTO( String buildConfigId, HistoricalEntryDTO[] downloads )
+    {
         this.buildConfigId = buildConfigId;
         this.downloads = downloads;
     }
 
-    public String getBuildConfigId() {
+    public String getBuildConfigId()
+    {
         return buildConfigId;
     }
 
-    public void setBuildConfigId( String buildConfigId ) {
+    public void setBuildConfigId( String buildConfigId )
+    {
         this.buildConfigId = buildConfigId;
     }
 
@@ -34,7 +37,8 @@ public class HistoricalContentDTO
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder builder = new StringBuilder();
         String content = String.format( "HistoricalContentDTO [\n  buildConfigId=%s\n]\n", buildConfigId );
         builder.append( content );

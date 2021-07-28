@@ -12,7 +12,7 @@ import static org.commonjava.util.sidecar.model.pkg.PackageTypeConstants.PKG_TYP
 import static org.commonjava.util.sidecar.model.pkg.PackageTypeConstants.PKG_TYPE_MAVEN;
 
 public class TrackedContentEntry
-                implements Comparable<TrackedContentEntry>,Externalizable
+                implements Comparable<TrackedContentEntry>, Externalizable
 {
     private static final long serialVersionUID = 6469004486206600578L;
 
@@ -48,8 +48,8 @@ public class TrackedContentEntry
 
     public TrackedContentEntry( final TrackingKey trackingKey, final StoreKey storeKey,
                                 final AccessChannel accessChannel, final String originUrl, final String path,
-                                final StoreEffect effect, final Long size,
-                                final String md5, final String sha1, final String sha256 )
+                                final StoreEffect effect, final Long size, final String md5, final String sha1,
+                                final String sha256 )
     {
         this.trackingKey = trackingKey;
         this.storeKey = storeKey;
@@ -57,9 +57,9 @@ public class TrackedContentEntry
         this.path = path;
         this.originUrl = originUrl;
         this.effect = effect;
-        this.md5=md5;
-        this.sha1=sha1;
-        this.sha256=sha256;
+        this.md5 = md5;
+        this.sha1 = sha1;
+        this.sha256 = sha256;
         this.size = size;
         this.timestamps = new HashSet<>( Collections.singleton( System.currentTimeMillis() ) );
     }
@@ -69,9 +69,19 @@ public class TrackedContentEntry
         return originUrl;
     }
 
+    public void setOriginUrl( String originUrl )
+    {
+        this.originUrl = originUrl;
+    }
+
     public String getMd5()
     {
         return md5;
+    }
+
+    public void setMd5( String md5 )
+    {
+        this.md5 = md5;
     }
 
     public String getSha256()
@@ -79,9 +89,19 @@ public class TrackedContentEntry
         return sha256;
     }
 
+    public void setSha256( String sha256 )
+    {
+        this.sha256 = sha256;
+    }
+
     public String getSha1()
     {
         return sha1;
+    }
+
+    public void setSha1( String sha1 )
+    {
+        this.sha1 = sha1;
     }
 
     public StoreKey getStoreKey()
@@ -89,9 +109,19 @@ public class TrackedContentEntry
         return storeKey;
     }
 
+    public void setStoreKey( StoreKey storeKey )
+    {
+        this.storeKey = storeKey;
+    }
+
     public AccessChannel getAccessChannel()
     {
         return accessChannel;
+    }
+
+    public void setAccessChannel( AccessChannel accessChannel )
+    {
+        this.accessChannel = accessChannel;
     }
 
     public String getPath()
@@ -99,9 +129,19 @@ public class TrackedContentEntry
         return path;
     }
 
+    public void setPath( String path )
+    {
+        this.path = path;
+    }
+
     public TrackingKey getTrackingKey()
     {
         return trackingKey;
+    }
+
+    public void setTrackingKey( TrackingKey trackingKey )
+    {
+        this.trackingKey = trackingKey;
     }
 
     public StoreEffect getEffect()
@@ -109,9 +149,19 @@ public class TrackedContentEntry
         return effect;
     }
 
+    public void setEffect( StoreEffect effect )
+    {
+        this.effect = effect;
+    }
+
     public Long getSize()
     {
         return size;
+    }
+
+    public void setSize( Long size )
+    {
+        this.size = size;
     }
 
     public long getIndex()
@@ -119,54 +169,10 @@ public class TrackedContentEntry
         return index;
     }
 
-    public void setStoreKey( StoreKey storeKey )
+    public void setIndex( long index )
     {
-        this.storeKey = storeKey;
-    }
-
-    public void setOriginUrl( String originUrl )
-    {
-        this.originUrl = originUrl;
-    }
-
-
-    public void setTrackingKey(TrackingKey trackingKey) {
-        this.trackingKey = trackingKey;
-    }
-
-    public void setAccessChannel(AccessChannel accessChannel) {
-        this.accessChannel = accessChannel;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public void setEffect(StoreEffect effect) {
-        this.effect = effect;
-    }
-
-    public void setMd5(String md5) {
-        this.md5 = md5;
-    }
-
-    public void setSha256(String sha256) {
-        this.sha256 = sha256;
-    }
-
-    public void setSha1(String sha1) {
-        this.sha1 = sha1;
-    }
-
-    public void setSize(Long size) {
-        this.size = size;
-    }
-
-    public void setIndex(long index) {
         this.index = index;
     }
-
-
 
     @Override
     public int compareTo( final TrackedContentEntry other )
@@ -267,16 +273,10 @@ public class TrackedContentEntry
         }
         if ( effect == null )
         {
-            if ( other.effect != null )
-            {
-                return false;
-            }
+            return other.effect == null;
         }
-        else if ( !effect.equals( other.effect ) )
-        {
-            return false;
-        }
-        return true;
+        else
+            return effect.equals( other.effect );
     }
 
     @Override
@@ -284,12 +284,12 @@ public class TrackedContentEntry
     {
         return String.format(
                         "TrackedContentEntry [\n  trackingKey=%s\n  storeKey=%s\n  accessChannel=%s\n  path=%s\n  originUrl=%s\n  effect=%s\n  md5=%s\n  sha1=%s\n  sha256=%s\nObject hashcode=%s\n]",
-                        trackingKey, storeKey, accessChannel, path, originUrl, effect, md5, sha1, sha256, super.hashCode() );
+                        trackingKey, storeKey, accessChannel, path, originUrl, effect, md5, sha1, sha256,
+                        super.hashCode() );
     }
 
     @Override
-    public void writeExternal( final ObjectOutput out )
-                    throws IOException
+    public void writeExternal( final ObjectOutput out ) throws IOException
     {
         out.writeObject( Integer.toString( VERSION ) );
         out.writeObject( trackingKey );
@@ -309,8 +309,7 @@ public class TrackedContentEntry
     }
 
     @Override
-    public void readExternal( final ObjectInput in )
-                    throws IOException, ClassNotFoundException
+    public void readExternal( final ObjectInput in ) throws IOException, ClassNotFoundException
     {
         // This is a little awkward. The original version didn't have a version constant, so it wasn't possible
         // to just read it from the data stream and use it to guide the deserialization process. Instead,
@@ -345,9 +344,9 @@ public class TrackedContentEntry
         // TODO: We should make future versioning / deserialization decisions based on the version we read / infer above
         if ( version > VERSION )
         {
-            throw new IOException(
-                            "This class is of an older version: " + VERSION + " vs. the version read from the data stream: "
-                                            + version + ". Cannot deserialize." );
+            throw new IOException( "This class is of an older version: " + VERSION
+                                                   + " vs. the version read from the data stream: " + version
+                                                   + ". Cannot deserialize." );
         }
 
         final String storeKeyName = (String) in.readObject();

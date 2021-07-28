@@ -52,9 +52,7 @@ public class ReportService
 {
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
-    private TrackedContent trackedContent = new TrackedContent();
-
-    private final HashMap<String,HistoricalEntryDTO> historicalContentMap = new HashMap<>();
+    private final HashMap<String, HistoricalEntryDTO> historicalContentMap = new HashMap<>();
 
     @Inject
     ObjectMapper objectMapper;
@@ -68,17 +66,22 @@ public class ReportService
     @Inject
     ProxyService proxyService;
 
+    private TrackedContent trackedContent = new TrackedContent();
+
     @PostConstruct
-    void init(){
+    void init()
+    {
         loadReport( sidecarConfig.localRepository.orElse( DEFAULT_REPO_PATH ) );
     }
 
-    public void appendUpload(TrackedContentEntry upload){
-        this.trackedContent.appendUpload(upload);
+    public void appendUpload( TrackedContentEntry upload )
+    {
+        this.trackedContent.appendUpload( upload );
     }
 
-    public void appendDownload(TrackedContentEntry download){
-        this.trackedContent.appendDownload(download);
+    public void appendDownload( TrackedContentEntry download )
+    {
+        this.trackedContent.appendDownload( download );
     }
 
     public TrackedContent getTrackedContent()
@@ -86,42 +89,45 @@ public class ReportService
         return trackedContent;
     }
 
-    private void loadReport(String path)
+    private void loadReport( String path )
     {
-        if (getBuildConfigId() != null){
+        if ( getBuildConfigId() != null )
+        {
             HistoricalContentDTO content;
-            Path filePath = Path.of(  path , File.separator, getBuildConfigId() );
+            Path filePath = Path.of( path, File.separator, getBuildConfigId() );
             logger.info( "Loading build content history:" + filePath );
             try
             {
                 String json = Files.readString( filePath );
                 content = objectMapper.readValue( json, HistoricalContentDTO.class );
-                if ( content == null ){
+                if ( content == null )
+                {
                     logger.warn( "Failed to read historical content which is empty." );
                 }
-                else {
-                    for (HistoricalEntryDTO download:content.getDownloads()){
-                        this.historicalContentMap.put(download.getPath(),download);
+                else
+                {
+                    for ( HistoricalEntryDTO download : content.getDownloads() )
+                    {
+                        this.historicalContentMap.put( download.getPath(), download );
                     }
                 }
             }
-            catch ( IOException e)
+            catch ( IOException e )
             {
                 logger.error( "convert file " + filePath + " to object failed" );
             }
         }
     }
 
-    @ConsumeEvent(value = FOLO_BUILD)
-    private void logFoloDownload(String path)
+    @ConsumeEvent( value = FOLO_BUILD )
+    private void logFoloDownload( String path )
     {
-        HistoricalEntryDTO entryDTO = historicalContentMap.get(path);
-        this.trackedContent.appendDownload(new TrackedContentEntry(
-                new TrackingKey(getBuildConfigId()),
-                entryDTO.getStoreKey(),
-                AccessChannel.NATIVE,
-                entryDTO.getOriginUrl(), entryDTO.getPath(), StoreEffect.DOWNLOAD, entryDTO.getSize(),
-                entryDTO.getMd5(), entryDTO.getSha1(), entryDTO.getSha256() ));
+        HistoricalEntryDTO entryDTO = historicalContentMap.get( path );
+        this.trackedContent.appendDownload(
+                        new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), entryDTO.getStoreKey(),
+                                                 AccessChannel.NATIVE, entryDTO.getOriginUrl(), entryDTO.getPath(),
+                                                 StoreEffect.DOWNLOAD, entryDTO.getSize(), entryDTO.getMd5(),
+                                                 entryDTO.getSha1(), entryDTO.getSha256() ) );
     }
 
     public Uni<Response> exportReport() throws Exception
@@ -129,9 +135,8 @@ public class ReportService
         //Change here when we decide indy import API
         String path = "/api/folo/admin/report/import";
 
-        return classifier.classifyAnd( path, HttpMethod.PUT, ( client, service ) ->
-                        proxyService.wrapAsyncCall(
-                                        client.put( path ).sendJsonObject( exportReportJson() ), null ));
+        return classifier.classifyAnd( path, HttpMethod.PUT, ( client, service ) -> proxyService.wrapAsyncCall(
+                        client.put( path ).sendJsonObject( exportReportJson() ), null ) );
     }
 
     private JsonObject exportReportJson()
@@ -139,7 +144,8 @@ public class ReportService
         return JsonObject.mapFrom( trackedContent );
     }
 
-    public void clearReport(){
+    public void clearReport()
+    {
         trackedContent = new TrackedContent();
     }
 

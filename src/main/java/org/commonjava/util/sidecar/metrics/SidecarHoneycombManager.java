@@ -33,10 +33,9 @@ import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.HTTP_MET
 import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.LATENCY_MILLIS;
 import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.NOOP;
 import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.PATH_INFO;
-import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.TRACE_ID;
 import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.STATUS_CODE;
+import static org.commonjava.util.sidecar.metrics.MetricFieldsConstants.TRACE_ID;
 import static org.commonjava.util.sidecar.services.ProxyService.HEADER_PROXY_TRACE_ID;
-
 
 @ApplicationScoped
 public class SidecarHoneycombManager
@@ -54,7 +53,7 @@ public class SidecarHoneycombManager
     public void init()
     {
         super.init();
-//        registerRootSpanFields( GoldenSignalsRootSpanFields.getInstance() );
+        //        registerRootSpanFields( GoldenSignalsRootSpanFields.getInstance() );
     }
 
     public void addFields( long elapse, HttpServerRequest request, Object item, Throwable err )

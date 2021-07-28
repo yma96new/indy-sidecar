@@ -13,9 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public final class StoreKey
-        implements Comparable<StoreKey>, Externalizable
+                implements Comparable<StoreKey>, Externalizable
 {
     private static final int VERSION = 1;
+
+    private static final String MAVEN_PKG_KEY = "maven";
+
+    private static final ConcurrentHashMap<StoreKey, StoreKey> deduplications = new ConcurrentHashMap<>();
 
     private String packageType;
 
@@ -23,9 +27,8 @@ public final class StoreKey
 
     private String name;
 
-    private static final String MAVEN_PKG_KEY = "maven";
-
-    public StoreKey(){
+    public StoreKey()
+    {
         packageType = "";
         type = StoreType.group;
         name = "";
@@ -46,19 +49,59 @@ public final class StoreKey
         this.name = name;
     }
 
-    public void setPackageType( String packageType )
+    public static StoreKey fromString( final String id )
     {
-        this.packageType = packageType;
+        Logger logger = LoggerFactory.getLogger( StoreKey.class );
+        logger.debug( "Parsing raw string: '{}' to StoreKey", id );
+
+        String[] parts = id.split( ":" );
+
+        logger.debug( "Got {} parts: {}", parts.length, Arrays.asList( parts ) );
+
+        String packageType = null;
+        String name;
+        StoreType type = null;
+
+        // FIXME: We need to get to a point where it's safe for this to be an error and not default to maven.
+        if ( parts.length < 2 )
+        {
+            packageType = MAVEN_PKG_KEY;
+            type = StoreType.remote;
+            name = id;
+        }
+        else if ( parts.length < 3 || isBlank( parts[0] ) )
+        {
+            packageType = MAVEN_PKG_KEY;
+            type = StoreType.get( parts[0] );
+            name = parts[1];
+        }
+        else
+        {
+            packageType = parts[0];
+            type = StoreType.get( parts[1] );
+            name = parts[2];
+        }
+
+        if ( type == null )
+        {
+            throw new IllegalArgumentException( "Invalid StoreType: " + parts[1] );
+        }
+
+        // logger.info( "parsed store-key with type: '{}' and name: '{}'", type, name );
+
+        return new StoreKey( packageType, type, name );
     }
 
-    public void setType( StoreType type )
+    public static StoreKey dedupe( StoreKey key )
     {
-        this.type = type;
-    }
+        StoreKey result = deduplications.get( key );
+        if ( result == null )
+        {
+            deduplications.put( key, key );
+            result = key;
+        }
 
-    public void setName( String name )
-    {
-        this.name = name;
+        return result;
     }
 
     public String getPackageType()
@@ -66,14 +109,29 @@ public final class StoreKey
         return packageType;
     }
 
+    public void setPackageType( String packageType )
+    {
+        this.packageType = packageType;
+    }
+
     public StoreType getType()
     {
         return type;
     }
 
+    public void setType( StoreType type )
+    {
+        this.type = type;
+    }
+
     public String getName()
     {
         return name;
+    }
+
+    public void setName( String name )
+    {
+        this.name = name;
     }
 
     @Override
@@ -134,49 +192,6 @@ public final class StoreKey
         return type == other.type;
     }
 
-    public static StoreKey fromString( final String id )
-    {
-        Logger logger = LoggerFactory.getLogger( StoreKey.class );
-        logger.debug( "Parsing raw string: '{}' to StoreKey", id );
-
-        String[] parts = id.split(":");
-
-        logger.debug( "Got {} parts: {}", parts.length, Arrays.asList( parts ) );
-
-        String packageType = null;
-        String name;
-        StoreType type = null;
-
-        // FIXME: We need to get to a point where it's safe for this to be an error and not default to maven.
-        if ( parts.length < 2 )
-        {
-            packageType = MAVEN_PKG_KEY;
-            type = StoreType.remote;
-            name = id;
-        }
-        else if ( parts.length < 3 || isBlank( parts[0] ) )
-        {
-            packageType = MAVEN_PKG_KEY;
-            type = StoreType.get( parts[0] );
-            name = parts[1];
-        }
-        else
-        {
-            packageType = parts[0];
-            type = StoreType.get( parts[1] );
-            name = parts[2];
-        }
-
-        if ( type == null )
-        {
-            throw new IllegalArgumentException( "Invalid StoreType: " + parts[1] );
-        }
-
-        // logger.info( "parsed store-key with type: '{}' and name: '{}'", type, name );
-
-        return new StoreKey( packageType, type, name );
-    }
-
     @Override
     public int compareTo( final StoreKey o )
     {
@@ -194,23 +209,8 @@ public final class StoreKey
         return comp;
     }
 
-    private static ConcurrentHashMap<StoreKey, StoreKey> deduplications = new ConcurrentHashMap<>();
-
-    public static StoreKey dedupe( StoreKey key )
-    {
-        StoreKey result = deduplications.get( key );
-        if ( result == null )
-        {
-            deduplications.put( key, key );
-            result = key;
-        }
-
-        return result;
-    }
-
     @Override
-    public void writeExternal( final ObjectOutput out )
-            throws IOException
+    public void writeExternal( final ObjectOutput out ) throws IOException
     {
         out.writeInt( VERSION );
 
@@ -229,8 +229,7 @@ public final class StoreKey
     }
 
     @Override
-    public void readExternal( final ObjectInput in )
-            throws IOException, ClassNotFoundException
+    public void readExternal( final ObjectInput in ) throws IOException, ClassNotFoundException
     {
         int keyVersion = in.readInt();
 

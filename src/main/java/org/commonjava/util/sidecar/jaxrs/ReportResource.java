@@ -32,7 +32,8 @@ public class ReportResource
     @APIResponse( responseCode = "500", description = "Tracking report generation failed" )
     @Produces( APPLICATION_JSON )
     @GET
-    public TrackedContent get (){
+    public TrackedContent get()
+    {
         return reportService.getTrackedContent(); //this will automatically serialized by jackson
     }
 
@@ -42,7 +43,7 @@ public class ReportResource
     @Path( "/export" )
     @Produces( TEXT_PLAIN )
     @GET
-    public Uni<Response> exportGet () throws Exception
+    public Uni<Response> exportGet() throws Exception
     {
         return reportService.exportReport();
     }
@@ -52,7 +53,8 @@ public class ReportResource
     @APIResponse( responseCode = "404", description = "No tracking report found" )
     @Produces( APPLICATION_JSON )
     @DELETE
-    public TrackedContent delete (){
+    public TrackedContent delete()
+    {
         reportService.clearReport();
         return reportService.getTrackedContent();
     }

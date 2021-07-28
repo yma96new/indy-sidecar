@@ -1,4 +1,5 @@
 package org.commonjava.util.sidecar.model;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -6,7 +7,8 @@ import java.util.Set;
 public enum StoreType
 {
     group( false, "group", "groups", "g" ), remote( false, "remote", "remotes", "repository", "repositories",
-        "r" ), hosted( true, "hosted", "hosted", "deploy", "deploys", "deploy_point", "h", "d" );
+                                                    "r" ), hosted( true, "hosted", "hosted", "deploy", "deploys",
+                                                                   "deploy_point", "h", "d" );
 
     //    private static final Logger logger = new Logger( StoreType.class );
 
@@ -18,8 +20,7 @@ public enum StoreType
 
     private final Set<String> aliases;
 
-    StoreType( final boolean writable, final String singular,
-               final String plural, final String... aliases )
+    StoreType( final boolean writable, final String singular, final String plural, final String... aliases )
     {
         this.writable = writable;
         this.singular = singular;
@@ -36,6 +37,31 @@ public enum StoreType
         this.aliases = a;
     }
 
+    public static StoreType get( final String typeStr )
+    {
+        if ( typeStr == null )
+        {
+            return null;
+        }
+
+        final String type = typeStr.trim().toLowerCase();
+        if ( type.length() < 1 )
+        {
+            return null;
+        }
+
+        for ( final StoreType st : values() )
+        {
+            //            logger.info( "Checking '{}' vs name: '{}' and aliases: {}", type, st.name(), join( st.aliases, ", " ) );
+            if ( st.name().equalsIgnoreCase( type ) || st.aliases.contains( type ) )
+            {
+                return st;
+            }
+        }
+
+        return null;
+    }
+
     public String pluralEndpointName()
     {
         return plural;
@@ -49,33 +75,6 @@ public enum StoreType
     public boolean isWritable()
     {
         return writable;
-    }
-
-    public static StoreType get( final String typeStr )
-    {
-        if ( typeStr == null )
-        {
-            return null;
-        }
-
-        final String type = typeStr.trim()
-                .toLowerCase();
-        if ( type.length() < 1 )
-        {
-            return null;
-        }
-
-        for ( final StoreType st : values() )
-        {
-            //            logger.info( "Checking '{}' vs name: '{}' and aliases: {}", type, st.name(), join( st.aliases, ", " ) );
-            if ( st.name()
-                    .equalsIgnoreCase( type ) || st.aliases.contains( type ) )
-            {
-                return st;
-            }
-        }
-
-        return null;
     }
 
 }

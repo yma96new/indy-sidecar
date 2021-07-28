@@ -46,8 +46,6 @@ import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO
 public class ArchiveRetrieveService
 {
 
-    private final Logger logger = LoggerFactory.getLogger( getClass() );
-
     private final static int CONNECTION_REQUEST_TIMEOUT = 30 * 60 * 1000; // 30m
 
     private final static int CONNECTION_TIMEOUT = 30 * 60 * 1000; // 30m
@@ -58,10 +56,12 @@ public class ArchiveRetrieveService
 
     private final static String MAVEN_META = "maven-metadata.xml";
 
-    private CloseableHttpClient client;
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
     SidecarConfig sidecarConfig;
+
+    private CloseableHttpClient client;
 
     @PostConstruct
     public void init()

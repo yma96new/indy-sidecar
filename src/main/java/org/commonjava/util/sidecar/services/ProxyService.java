@@ -15,7 +15,6 @@
  */
 package org.commonjava.util.sidecar.services;
 
-import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.MultiMap;
 import io.vertx.core.VertxException;
@@ -43,10 +42,10 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
@@ -72,12 +71,6 @@ public class ProxyService
 
     private final String PROXY_ORIGIN = "proxy-origin";
 
-    private long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis( 30 ); // default 30 minutes
-
-    private long DEFAULT_BACKOFF_MILLIS = Duration.ofSeconds( 5 ).toMillis();
-
-    private volatile long timeout;
-
     @Inject
     ProxyConfiguration proxyConfiguration;
 
@@ -86,6 +79,12 @@ public class ProxyService
 
     @Inject
     ReportService reportService;
+
+    private final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis( 30 ); // default 30 minutes
+
+    private final long DEFAULT_BACKOFF_MILLIS = Duration.ofSeconds( 5 ).toMillis();
+
+    private volatile long timeout;
 
     @PostConstruct
     void init()
@@ -122,7 +121,8 @@ public class ProxyService
     public Uni<Response> doHead( String path, HttpServerRequest request ) throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                        client.head( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).send(), null ) ), request );
+                        client.head( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).send(), null ) ),
+                                 request );
     }
 
     public Uni<Response> doGet( String packageType, String type, String name, String path, HttpServerRequest request )
@@ -137,13 +137,13 @@ public class ProxyService
         TrackedContentEntry entry;
         if ( getBuildConfigId() != null && path.split( "/" )[2].equals( "maven" ) )
         {
-            entry = new TrackedContentEntry(
-                            new TrackingKey( getBuildConfigId() ),
-                            generateStoreKey( path ), AccessChannel.NATIVE,
-                            "", "/" + path.replaceFirst( "^\\/?(\\w+\\/){5}","" ), StoreEffect.DOWNLOAD, (long) 0,
-                            "", "", "" );
+            entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
+                                             AccessChannel.NATIVE, "",
+                                             "/" + path.replaceFirst( "^\\/?(\\w+\\/){5}", "" ), StoreEffect.DOWNLOAD,
+                                             (long) 0, "", "", "" );
         }
-        else {
+        else
+        {
             entry = null;
         }
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
@@ -157,23 +157,25 @@ public class ProxyService
         Buffer buf = Buffer.buffer( bytes );
 
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                        client.post( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).sendBuffer( buf ), null ) ),
-                                 request );
+                        client.post( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).sendBuffer( buf ),
+                        null ) ), request );
     }
 
-    public Uni<Response> doPut( String packageType, String type, String name, String path, InputStream is, HttpServerRequest request )
-                    throws Exception
+    public Uni<Response> doPut( String packageType, String type, String name, String path, InputStream is,
+                                HttpServerRequest request ) throws Exception
     {
         String contentPath = UrlUtils.buildUrl( CONTENT_REST_BASE_PATH, packageType, type, name, path );
         byte[] bytes = IOUtils.toByteArray( is );
         Buffer buf = Buffer.buffer( bytes );
-        if ( getBuildConfigId() != null)
+        if ( getBuildConfigId() != null )
         {
-            TrackedContentEntry entry = new TrackedContentEntry(
-                    new TrackingKey( getBuildConfigId() ),
-                    generateStoreKey( contentPath ), AccessChannel.NATIVE,
-                    "http://" + proxyConfiguration.getServices().iterator().next().host + "/" + contentPath, "/" + contentPath, StoreEffect.UPLOAD, (long) bytes.length,
-                    "", "", "" );
+            TrackedContentEntry entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ),
+                                                                 generateStoreKey( contentPath ), AccessChannel.NATIVE,
+                                                                 "http://" + proxyConfiguration.getServices()
+                                                                                               .iterator()
+                                                                                               .next().host + "/"
+                                                                                 + contentPath, "/" + contentPath,
+                                                                 StoreEffect.UPLOAD, (long) bytes.length, "", "", "" );
 
             MessageDigest message;
             try
@@ -201,7 +203,8 @@ public class ProxyService
                                                                                                  .putHeaders( getHeaders(
                                                                                                                  request ) )
                                                                                                  .timeout( timeout )
-                                                                                                 .sendBuffer(buf), null ) ), request );
+                                                                                                 .sendBuffer( buf ),
+                                                                                           null ) ), request );
     }
 
     public Uni<Response> doPut( String path, InputStream is, HttpServerRequest request ) throws Exception
@@ -212,11 +215,12 @@ public class ProxyService
 
         if ( getBuildConfigId() != null && path.split( "/" )[2].equals( "maven" ) )
         {
-            TrackedContentEntry entry = new TrackedContentEntry(
-                            new TrackingKey( getBuildConfigId() ),
-                            generateStoreKey( path ), AccessChannel.NATIVE,
-                            "http://" + proxyConfiguration.getServices().iterator().next().host + "/" + path, path, StoreEffect.UPLOAD, (long) bytes.length,
-                            "", "", "" );
+            TrackedContentEntry entry =
+                            new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
+                                                     AccessChannel.NATIVE,
+                                                     "http://" + proxyConfiguration.getServices().iterator().next().host
+                                                                     + "/" + path, path, StoreEffect.UPLOAD,
+                                                     (long) bytes.length, "", "", "" );
 
             MessageDigest message;
             try
@@ -239,20 +243,18 @@ public class ProxyService
         }
 
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                        client.put( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).sendBuffer( buf ), null ) ),
-                                 request );
+                        client.put( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).sendBuffer( buf ),
+                        null ) ), request );
     }
 
     public Uni<Response> doDelete( String path, HttpServerRequest request ) throws Exception
     {
-        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                (client, service) -> wrapAsyncCall( client.delete( p )
-                        .putHeaders( getHeaders( request ) )
-                        .timeout( timeout )
-                        .send(), null ) ), request );
+        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
+                        client.delete( p ).putHeaders( getHeaders( request ) ).timeout( timeout ).send(), null ) ),
+                                 request );
     }
 
-    public Uni<Response> wrapAsyncCall( Uni<HttpResponse<Buffer>> asyncCall, TrackedContentEntry entry)
+    public Uni<Response> wrapAsyncCall( Uni<HttpResponse<Buffer>> asyncCall, TrackedContentEntry entry )
     {
         ProxyConfiguration.Retry retry = proxyConfiguration.getRetry();
         Uni<Response> ret = asyncCall.onItem().transform( buf -> convertProxyResp( buf, entry ) );
@@ -285,7 +287,7 @@ public class ProxyService
      * Read status and headers from proxy resp and set them to direct response.
      * @param resp proxy resp
      */
-    private Response convertProxyResp( HttpResponse<Buffer> resp , TrackedContentEntry entry)
+    private Response convertProxyResp( HttpResponse<Buffer> resp, TrackedContentEntry entry )
     {
         logger.debug( "Proxy resp: {} {}", resp.statusCode(), resp.statusMessage() );
         logger.trace( "Raw resp headers:\n{}", resp.headers() );
@@ -299,13 +301,13 @@ public class ProxyService
         if ( resp.body() != null )
         {
             byte[] bytes = resp.body().getBytes();
-            if( entry != null)
+            if ( entry != null )
             {
                 entry.setSize( (long) bytes.length );
-                String[] headers = resp.getHeader( "indy-origin" ).split( ":" ) ;
-                entry.setOriginUrl( "http://" + proxyConfiguration.getServices().iterator().next().host
-                                                    + "/api/content/" + headers[0]+ "/" + headers[1]+ "/" + headers[2]
-                                                    + entry.getPath() );
+                String[] headers = resp.getHeader( "indy-origin" ).split( ":" );
+                entry.setOriginUrl(
+                                "http://" + proxyConfiguration.getServices().iterator().next().host + "/api/content/"
+                                                + headers[0] + "/" + headers[1] + "/" + headers[2] + entry.getPath() );
                 MessageDigest message;
                 try
                 {
@@ -343,8 +345,8 @@ public class ProxyService
     {
         MultiMap headers = request.headers();
         io.vertx.mutiny.core.MultiMap ret = io.vertx.mutiny.core.MultiMap.newInstance( headers )
-                .remove( HOST )
-                .add( TRACE_ID, getTraceId( headers ) );
+                                                                         .remove( HOST )
+                                                                         .add( TRACE_ID, getTraceId( headers ) );
         try
         {
             URL url = new URL( request.absoluteURI() );
@@ -370,22 +372,24 @@ public class ProxyService
         return isNotBlank( externalID ) ? externalID : UUID.randomUUID().toString();
     }
 
-    @FunctionalInterface
-    private interface Function<T, R>
-    {
-        R apply( T t ) throws Exception;
-    }
-
-    public Uni<Response> normalizePathAnd( String path, Function<String, Uni<Response>> action, HttpServerRequest request ) throws Exception
+    public Uni<Response> normalizePathAnd( String path, Function<String, Uni<Response>> action,
+                                           HttpServerRequest request ) throws Exception
     {
         String traceId = UUID.randomUUID().toString();
         request.headers().set( HEADER_PROXY_TRACE_ID, traceId );
         return action.apply( normalizePath( path ) );
     }
 
-    private StoreKey generateStoreKey ( String path ){
-        String[] elements = path.split("/");
-        return new StoreKey(elements[2],StoreType.valueOf( elements[3] ),elements[4]);
+    private StoreKey generateStoreKey( String path )
+    {
+        String[] elements = path.split( "/" );
+        return new StoreKey( elements[2], StoreType.valueOf( elements[3] ), elements[4] );
+    }
+
+    @FunctionalInterface
+    private interface Function<T, R>
+    {
+        R apply( T t ) throws Exception;
     }
 
 }
