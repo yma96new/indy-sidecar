@@ -26,15 +26,15 @@ import static javax.ws.rs.core.Response.Status.OK;
 
 @QuarkusTest
 @TestProfile( MockTestProfile.class )
-public class MavenDownloadFromArchiveTest
+public class NPMDownloadFromArchiveTest
 {
 
     @Test
     public void testMetadataDownload()
     {
-        // do maven metadata proxy no matter it exists locally or not
+        // do npm metadata proxy no matter it exists locally or not
         given().when()
-               .get( "/api/folo/track/2021/maven/group/repo1/org/apache/maven/maven-core/3.0/maven-metadata.xml" )
+               .get( "/api/folo/track/2021/npm/group/npmjs/@babel/code-frame" )
                .then()
                .statusCode( NOT_FOUND.getStatusCode() );
     }
@@ -43,7 +43,7 @@ public class MavenDownloadFromArchiveTest
     public void testDownloadSuccess()
     {
         given().when()
-               .get( "/api/folo/track/2021/maven/group/repo1/org/apache/maven/maven-core/3.0/maven-core-3.0.jar" )
+               .get( "/api/folo/track/2021/npm/group/npmjs/@babel/code-frame/-/code-frame-7.tgz" )
                .then()
                .statusCode( OK.getStatusCode() );
     }
@@ -52,7 +52,7 @@ public class MavenDownloadFromArchiveTest
     public void testDownloadNotFound()
     {
         given().when()
-               .get( "/api/folo/track/2021/maven/group/repo1/org/apache/maven/maven-core/3.2/maven-core-3.2.jar" )
+               .get( "/api/folo/track/2021/npm/group/npmjs/@babel/code-frame/-/code-frame-8.tgz" )
                .then()
                .statusCode( NOT_FOUND.getStatusCode() );
     }

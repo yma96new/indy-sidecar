@@ -83,7 +83,7 @@ public class FoloContentAccessResource
         }
 
         Optional<File> download = archiveService.getLocally( path );
-        if ( download.isPresent() )
+        if ( download.isPresent() && download.get().isFile() )
         {
             InputStream inputStream = FileUtils.openInputStream( download.get() );
             final Response.ResponseBuilder builder = Response.ok( new TransferStreamingOutput( inputStream ) );

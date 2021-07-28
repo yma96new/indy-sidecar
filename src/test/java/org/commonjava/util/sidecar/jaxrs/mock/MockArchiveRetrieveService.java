@@ -41,10 +41,25 @@ public class MockArchiveRetrieveService
             File tracked = new File( DEFAULT_REPO_PATH, "1000" );
             FileUtils.write( tracked, new String( getBytes( SIZE_50K ) ), "UTF-8" );
 
-            String path = "/org/apache/maven/maven-core/3.0/maven-core-3.0.jar";
-            File jar = new File( DEFAULT_REPO_PATH + path );
+            String mavenPath = "/org/apache/maven/maven-core/3.0/maven-core-3.0.jar";
+            File jar = new File( DEFAULT_REPO_PATH + mavenPath );
             new File( jar.getParent() ).mkdirs();
             FileUtils.write( jar, new String( getBytes( SIZE_50K ) ), "UTF-8" );
+
+            String mavenMetaPath = "/org/apache/maven/maven-core/3.0/maven-metadata.xml";
+            File mavenMetadata = new File( DEFAULT_REPO_PATH + mavenMetaPath );
+            new File( mavenMetadata.getParent() ).mkdirs();
+            FileUtils.write( mavenMetadata, new String( getBytes( SIZE_50K ) ), "UTF-8" );
+
+            String npmPath = "/@babel/code-frame/-/code-frame-7.tgz";
+            File tgz = new File( DEFAULT_REPO_PATH + npmPath );
+            new File( tgz.getParent() ).mkdirs();
+            FileUtils.write( tgz, new String( getBytes( SIZE_50K ) ), "UTF-8" );
+
+            String npmMetaPath = "/@babel/code-frame";
+            File npmMetadata = new File( DEFAULT_REPO_PATH + npmMetaPath );
+            new File( npmMetadata.getParent() ).mkdirs();
+            FileUtils.write( npmMetadata, new String( getBytes( SIZE_50K ) ), "UTF-8" );
         }
         catch ( IOException e )
         {
