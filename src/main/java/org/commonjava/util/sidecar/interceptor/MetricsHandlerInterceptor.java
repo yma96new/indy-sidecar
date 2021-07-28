@@ -110,14 +110,15 @@ public class MetricsHandlerInterceptor
             {
                 return;
             }
-            Span span = honeycombManager.startRootTracer( "sidecar-" + honeycombConfiguration.getFunctionName( path ) ); //
+            Span span = honeycombManager.startRootTracer(
+                            "sidecar-" + honeycombConfiguration.getFunctionName( path ) ); //
             if ( span != null )
             {
                 request.headers().set( HEADER_PROXY_SPAN_ID, span.getSpanId() );
             }
             long elapse = currentTimeMillis() - t.get();
             honeycombManager.addSpanField( SERVICE, honeycombConfiguration.getServiceName() );
-            honeycombManager.addSpanField( FUNCTION, funcName);
+            honeycombManager.addSpanField( FUNCTION, funcName );
             honeycombManager.addFields( elapse, request, item, err );
             honeycombManager.addRootSpanFields();
             honeycombManager.endTrace();

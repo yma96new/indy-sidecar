@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package org.commonjava.util.sidecar.interceptor;
+
 import javax.interceptor.InterceptorBinding;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

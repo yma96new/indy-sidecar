@@ -95,19 +95,23 @@ public class HistoricalEntryDTO
         this.size = size;
     }
 
-    public String getOriginUrl() {
+    public String getOriginUrl()
+    {
         return originUrl;
     }
 
-    public void setOriginUrl( String originUrl ) {
+    public void setOriginUrl( String originUrl )
+    {
         this.originUrl = originUrl;
     }
 
-    public String getLocalUrl() {
+    public String getLocalUrl()
+    {
         return localUrl;
     }
 
-    public void setLocalUrl( String localUrl ) {
+    public void setLocalUrl( String localUrl )
+    {
         this.localUrl = localUrl;
     }
 
@@ -148,7 +152,7 @@ public class HistoricalEntryDTO
         {
             return false;
         }
-        final HistoricalEntryDTO other = ( HistoricalEntryDTO ) obj;
+        final HistoricalEntryDTO other = (HistoricalEntryDTO) obj;
         if ( path == null )
         {
             if ( other.path != null )
@@ -162,24 +166,18 @@ public class HistoricalEntryDTO
         }
         if ( storeKey == null )
         {
-            if ( other.storeKey != null )
-            {
-                return false;
-            }
+            return other.storeKey == null;
         }
-        else if ( !storeKey.equals( other.storeKey ) )
-        {
-            return false;
-        }
-
-        return true;
+        else
+            return storeKey.equals( other.storeKey );
     }
 
     @Override
     public String toString()
     {
-        return String.format( "HistoricalEntryDTO [\n  storeKey=%s\n  path=%s\n  originUrl=%s\n  localUrl=%s\n  size=%d\n  md5=%s\n  sha256=%s\n  sha1=%s\n]",
-                              storeKey, path, originUrl, localUrl, size, md5, sha256, sha1 );
+        return String.format(
+                        "HistoricalEntryDTO [\n  storeKey=%s\n  path=%s\n  originUrl=%s\n  localUrl=%s\n  size=%d\n  md5=%s\n  sha256=%s\n  sha1=%s\n]",
+                        storeKey, path, originUrl, localUrl, size, md5, sha256, sha1 );
     }
 
     public String getStorePath()

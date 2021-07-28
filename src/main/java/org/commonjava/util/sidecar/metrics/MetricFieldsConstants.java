@@ -15,7 +15,8 @@
  */
 package org.commonjava.util.sidecar.metrics;
 
-public class MetricFieldsConstants {
+public class MetricFieldsConstants
+{
 
     public static final String HTTP_METHOD = "http-method";
 
@@ -37,5 +38,6 @@ public class MetricFieldsConstants {
 
     public static final String NOOP = "NOOP";
 
-    public static String[] HEADERS = { HTTP_METHOD, STATUS_CODE, PATH_INFO, TRACE_ID, LATENCY_MILLIS, ERROR_MESSAGE, ERROR_CLASS };
+    public static String[] HEADERS =
+                    { HTTP_METHOD, STATUS_CODE, PATH_INFO, TRACE_ID, LATENCY_MILLIS, ERROR_MESSAGE, ERROR_CLASS };
 }

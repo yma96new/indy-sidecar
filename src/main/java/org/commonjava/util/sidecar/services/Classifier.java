@@ -39,7 +39,7 @@ public class Classifier
     @Inject
     ProxyConfiguration serviceConfiguration;
 
-    private Map<ProxyConfiguration.ServiceConfig, WebClient> clientMap = new ConcurrentHashMap<>();
+    private final Map<ProxyConfiguration.ServiceConfig, WebClient> clientMap = new ConcurrentHashMap<>();
 
     public <R> R classifyAnd( String path, HttpServerRequest request,
                               BiFunction<WebClient, ProxyConfiguration.ServiceConfig, R> action ) throws Exception

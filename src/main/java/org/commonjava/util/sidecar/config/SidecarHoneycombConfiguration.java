@@ -43,20 +43,20 @@ public class SidecarHoneycombConfiguration
 
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
+    @Inject
+    SidecarHoneycombConfObj confObj;
+
     private Set<String> fieldSet;
+
+    private Map<String, SLIFunction> functionMap = EMPTY_MAP;
+
+    private Map<String, Integer> sampleRates = EMPTY_MAP; // made from functionMap for convenience
 
     @Override
     public Set<String> getFieldSet()
     {
         return fieldSet;
     }
-
-    @Inject
-    SidecarHoneycombConfObj confObj;
-
-    private Map<String, SLIFunction> functionMap = EMPTY_MAP;
-
-    private Map<String, Integer> sampleRates = EMPTY_MAP; // made from functionMap for convenience
 
     @PostConstruct
     void init()
@@ -123,6 +123,29 @@ public class SidecarHoneycombConfiguration
         return confObj.consoleTransport.orElse( false );
     }
 
+    public String getFunctionName( String path )
+    {
+        for ( SLIFunction f : functionMap.values() )
+        {
+            if ( f.pattern.matcher( path ).matches() )
+            {
+                return f.name;
+            }
+        }
+        return null;
+    }
+
+    public Map<String, SLIFunction> getFunctionMap()
+    {
+        return functionMap;
+    }
+
+    @Override
+    public Map<String, Integer> getSpanRates()
+    {
+        return sampleRates;
+    }
+
     public static class SLIFunction
     {
         Pattern pattern;
@@ -148,31 +171,9 @@ public class SidecarHoneycombConfiguration
         @Override
         public String toString()
         {
-            return "SLIFunction{" + "pattern=" + pattern + ", name='" + name + '\'' + ", sampleRate=" + sampleRate + '}';
+            return "SLIFunction{" + "pattern=" + pattern + ", name='" + name + '\'' + ", sampleRate=" + sampleRate
+                            + '}';
         }
-    }
-
-    public String getFunctionName( String path )
-    {
-        for ( SLIFunction f : functionMap.values() )
-        {
-            if ( f.pattern.matcher( path ).matches() )
-            {
-                return f.name;
-            }
-        }
-        return null;
-    }
-
-    public Map<String, SLIFunction> getFunctionMap()
-    {
-        return functionMap;
-    }
-
-    @Override
-    public Map<String, Integer> getSpanRates()
-    {
-        return sampleRates;
     }
 
 }

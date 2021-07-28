@@ -19,7 +19,6 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.apache.commons.io.FileUtils;
-import org.commonjava.util.sidecar.config.SidecarConfig;
 import org.commonjava.util.sidecar.services.ArchiveRetrieveService;
 import org.commonjava.util.sidecar.services.ProxyService;
 import org.commonjava.util.sidecar.util.TransferStreamingOutput;
@@ -88,7 +87,7 @@ public class FoloContentAccessResource
             InputStream inputStream = FileUtils.openInputStream( download.get() );
             final Response.ResponseBuilder builder = Response.ok( new TransferStreamingOutput( inputStream ) );
             logger.debug( "Download path: {} from historical archive.", path );
-            bus.publish(FOLO_BUILD, path);
+            bus.publish( FOLO_BUILD, path );
             return Uni.createFrom().item( builder.build() );
         }
         else
@@ -122,8 +121,8 @@ public class FoloContentAccessResource
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "hosted", "group",
                                               "remote" } ), required = true ) @PathParam( "type" ) final String type,
                               @Parameter( in = PATH, required = true ) @PathParam( "name" ) final String name,
-                              @PathParam( "path" ) String path, InputStream is, final @Context HttpServerRequest request )
-                    throws Exception
+                              @PathParam( "path" ) String path, InputStream is,
+                              final @Context HttpServerRequest request ) throws Exception
     {
         logger.debug( "Put proxy resource for folo request: {}", path );
         return proxyService.doPut( PKG_TYPE_MAVEN, type, name, path, is, request );

@@ -18,8 +18,8 @@ package org.commonjava.util.sidecar.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -47,12 +47,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @RegisterForReflection
 public class ProxyConfiguration
 {
-    @Inject
-    SidecarConfig sidecarConfig;
+    public static final String USER_DIR = System.getProperty( "user.dir" ); // where the JVM was invoked
+
+    private static final String PROXY_YAML = "proxy.yaml";
 
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
-    public static final String USER_DIR = System.getProperty( "user.dir" ); // where the JVM was invoked
+    @Inject
+    SidecarConfig sidecarConfig;
 
     @Inject
     transient EventBus bus;
@@ -60,14 +62,16 @@ public class ProxyConfiguration
     @JsonProperty( "read-timeout" )
     private String readTimeout;
 
+    private volatile Retry retry;
+
+    private final Set<ServiceConfig> services = Collections.synchronizedSet( new HashSet<>() );
+
+    private transient String md5Hex; // used to check whether the custom proxy.yaml has changed
+
     public String getReadTimeout()
     {
         return readTimeout;
     }
-
-    private volatile Retry retry;
-
-    private Set<ServiceConfig> services = Collections.synchronizedSet( new HashSet<>() );
 
     public Set<ServiceConfig> getServices()
     {
@@ -83,7 +87,7 @@ public class ProxyConfiguration
     public String toString()
     {
         return "ProxyConfiguration{" + "readTimeout='" + readTimeout + '\'' + ", retry=" + retry + ", services="
-                + services + '}';
+                        + services + '}';
     }
 
     @PostConstruct
@@ -92,8 +96,6 @@ public class ProxyConfiguration
         load( true );
         logger.info( "Proxy config, {}", this );
     }
-
-    private static final String PROXY_YAML = "proxy.yaml";
 
     /**
      * Load proxy config from '${user.dir}/config/proxy.yaml'. If not found, load from default classpath resource.
@@ -127,8 +129,6 @@ public class ProxyConfiguration
             logger.info( "Skip loading proxy config - no such file: {}", file );
         }
     }
-
-    private transient String md5Hex; // used to check whether the custom proxy.yaml has changed
 
     private void doLoad( InputStream res )
     {
@@ -220,7 +220,7 @@ public class ProxyConfiguration
         public String toString()
         {
             return "ServiceConfig{" + "host='" + host + '\'' + ", port=" + port + ", ssl=" + ssl + ", methods='"
-                    + methods + '\'' + ", pathPattern='" + pathPattern + '\'' + '}';
+                            + methods + '\'' + ", pathPattern='" + pathPattern + '\'' + '}';
         }
 
         private void normalize()

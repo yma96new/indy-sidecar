@@ -16,7 +16,7 @@
 package org.commonjava.util.sidecar.exception;
 
 public class ServiceNotFoundException
-        extends Exception
+                extends Exception
 {
     public ServiceNotFoundException( String message )
     {

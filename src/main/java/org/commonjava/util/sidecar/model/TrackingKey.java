@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-public class TrackingKey implements Externalizable
+public class TrackingKey
+                implements Externalizable
 {
 
     private String id;
@@ -13,16 +14,6 @@ public class TrackingKey implements Externalizable
     public TrackingKey()
     {
         id = "";
-    }
-
-    protected void setId( final String id )
-    {
-        if ( id == null )
-        {
-            throw new NullPointerException( "tracking id cannot be null." );
-        }
-
-        this.id = id;
     }
 
     public TrackingKey( final String id )
@@ -33,6 +24,16 @@ public class TrackingKey implements Externalizable
     public String getId()
     {
         return id;
+    }
+
+    protected void setId( final String id )
+    {
+        if ( id == null )
+        {
+            throw new NullPointerException( "tracking id cannot be null." );
+        }
+
+        this.id = id;
     }
 
     @Override
@@ -62,16 +63,10 @@ public class TrackingKey implements Externalizable
         final TrackingKey other = (TrackingKey) obj;
         if ( id == null )
         {
-            if ( other.id != null )
-            {
-                return false;
-            }
+            return other.id == null;
         }
-        else if ( !id.equals( other.id ) )
-        {
-            return false;
-        }
-        return true;
+        else
+            return id.equals( other.id );
     }
 
     @Override
@@ -81,15 +76,13 @@ public class TrackingKey implements Externalizable
     }
 
     @Override
-    public void writeExternal( final ObjectOutput out )
-            throws IOException
+    public void writeExternal( final ObjectOutput out ) throws IOException
     {
         out.writeObject( id );
     }
 
     @Override
-    public void readExternal( final ObjectInput in )
-            throws IOException, ClassNotFoundException
+    public void readExternal( final ObjectInput in ) throws IOException, ClassNotFoundException
     {
         id = (String) in.readObject();
     }
