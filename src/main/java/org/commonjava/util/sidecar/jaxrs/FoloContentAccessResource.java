@@ -45,10 +45,9 @@ import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
-import static org.commonjava.util.sidecar.services.PreSeedConstants.PKG_TYPE_MAVEN;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
 
-@Path( "/api/folo/track/{id}/maven/{type: (hosted|group|remote)}/{name}" )
+@Path( "/api/folo/track/{id}/{packageType: (maven|npm)}/{type: (hosted|group|remote)}/{name}" )
 public class FoloContentAccessResource
 {
     private final Logger logger = LoggerFactory.getLogger( getClass() );
@@ -62,13 +61,15 @@ public class FoloContentAccessResource
     @Inject
     ArchiveRetrieveService archiveService;
 
-    @Operation( description = "Retrieve Maven artifact content from historical archive or proxy" )
+    @Operation( description = "Retrieve Maven/NPM artifact content from historical archive or proxy" )
     @APIResponse( responseCode = "200", description = "Content stream" )
     @APIResponse( responseCode = "404", description = "Content is not available" )
     @Path( "{path: (.*)}" )
     @Produces( APPLICATION_OCTET_STREAM )
     @GET
     public Uni<Response> get( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
+                              @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
+                                              "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "hosted", "group",
                                               "remote" } ), required = true ) @PathParam( "type" ) final String type,
                               @Parameter( in = PATH, required = true ) @PathParam( "name" ) final String name,
@@ -78,11 +79,11 @@ public class FoloContentAccessResource
         if ( archiveService.shouldProxy( path ) )
         {
             logger.debug( "Get proxy resource for folo request: {}", path );
-            return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
+            return proxyService.doGet( packageType, type, name, path, request );
         }
 
         Optional<File> download = archiveService.getLocally( path );
-        if ( download.isPresent() )
+        if ( download.isPresent() && download.get().isFile() )
         {
             InputStream inputStream = FileUtils.openInputStream( download.get() );
             final Response.ResponseBuilder builder = Response.ok( new TransferStreamingOutput( inputStream ) );
@@ -92,7 +93,7 @@ public class FoloContentAccessResource
         }
         else
         {
-            return proxyService.doGet( PKG_TYPE_MAVEN, type, name, path, request );
+            return proxyService.doGet( packageType, type, name, path, request );
         }
     }
 
@@ -102,6 +103,8 @@ public class FoloContentAccessResource
     @HEAD
     @Path( "{path: (.*)}" )
     public Uni<Response> head( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
+                               @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
+                                               "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
                                @Parameter( in = PATH, schema = @Schema( enumeration = { "hosted", "group",
                                                "remote" } ), required = true ) @PathParam( "type" ) final String type,
                                @Parameter( in = PATH, required = true ) @PathParam( "name" ) final String name,
@@ -109,7 +112,7 @@ public class FoloContentAccessResource
                                final @Context HttpServerRequest request ) throws Exception
     {
         logger.debug( "Head proxy resource for folo request: {}", path );
-        return proxyService.doHead( PKG_TYPE_MAVEN, type, name, path, request );
+        return proxyService.doHead( packageType, type, name, path, request );
     }
 
     @Operation( description = "Store artifact content under the given artifact store (type/name) and path." )
@@ -118,6 +121,8 @@ public class FoloContentAccessResource
     @PUT
     @Path( "{path: (.*)}" )
     public Uni<Response> put( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
+                              @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
+                                              "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "hosted", "group",
                                               "remote" } ), required = true ) @PathParam( "type" ) final String type,
                               @Parameter( in = PATH, required = true ) @PathParam( "name" ) final String name,
@@ -125,6 +130,6 @@ public class FoloContentAccessResource
                               final @Context HttpServerRequest request ) throws Exception
     {
         logger.debug( "Put proxy resource for folo request: {}", path );
-        return proxyService.doPut( PKG_TYPE_MAVEN, type, name, path, is, request );
+        return proxyService.doPut( packageType, type, name, path, is, request );
     }
 }
