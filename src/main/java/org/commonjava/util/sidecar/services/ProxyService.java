@@ -71,6 +71,14 @@ public class ProxyService
 
     private final String PROXY_ORIGIN = "proxy-origin";
 
+    private long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis( 30 ); // default 30 minutes
+
+    private long DEFAULT_BACKOFF_MILLIS = Duration.ofSeconds( 3 ).toMillis();
+
+    private long DEFAULT_MAX_BACKOFF_MILLIS = Duration.ofSeconds( 15 ).toMillis();
+
+    private volatile long timeout;
+
     @Inject
     ProxyConfiguration proxyConfiguration;
 
@@ -80,11 +88,6 @@ public class ProxyService
     @Inject
     ReportService reportService;
 
-    private final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis( 30 ); // default 30 minutes
-
-    private final long DEFAULT_BACKOFF_MILLIS = Duration.ofSeconds( 5 ).toMillis();
-
-    private volatile long timeout;
 
     @PostConstruct
     void init()
@@ -257,18 +260,27 @@ public class ProxyService
     public Uni<Response> wrapAsyncCall( Uni<HttpResponse<Buffer>> asyncCall, TrackedContentEntry entry )
     {
         ProxyConfiguration.Retry retry = proxyConfiguration.getRetry();
+
         Uni<Response> ret = asyncCall.onItem().transform( buf -> convertProxyResp( buf, entry ) );
+
         if ( retry.count > 0 )
         {
             long backOff = retry.interval;
+            long maxBackOff = retry.maxBackOff;
             if ( retry.interval <= 0 )
             {
                 backOff = DEFAULT_BACKOFF_MILLIS;
             }
+            if ( retry.maxBackOff <= 0 )
+            {
+                maxBackOff = DEFAULT_MAX_BACKOFF_MILLIS;
+            }
+            logger.info( "Retry in use: retry count={}, interval={}, maxBackOff={}",
+                         retry.count, Duration.ofMillis( backOff ), Duration.ofMillis( maxBackOff ) );
             ret = ret.onFailure( t -> ( t instanceof IOException || t instanceof VertxException ) )
-                     .retry()
-                     .withBackOff( Duration.ofMillis( backOff ) )
-                     .atMost( retry.count );
+                    .retry()
+                    .withBackOff( Duration.ofMillis( backOff ), Duration.ofMillis( maxBackOff ) )
+                    .atMost( retry.count );
         }
         return ret.onFailure().recoverWithItem( this::handleProxyException );
     }
