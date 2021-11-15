@@ -3,6 +3,7 @@ proxy:
   retry:
     count: 3
     interval: 3000
+    maxBackOff: 15000
   services:
     - host: indy-master-devel.psi.redhat.com
       ssl: false

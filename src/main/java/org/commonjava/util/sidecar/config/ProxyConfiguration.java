@@ -141,7 +141,7 @@ public class ProxyConfiguration
             }
 
             ProxyConfiguration parsed = parseConfig( str );
-            logger.info( "Loaded: {}", parsed );
+            logger.debug( "Loaded from proxy yaml: {}", parsed );
 
             if ( parsed.readTimeout != null )
             {
@@ -149,6 +149,18 @@ public class ProxyConfiguration
             }
 
             this.retry = parsed.retry;
+            String countEnv = System.getenv( "retry.count");
+            String intervalEnv = System.getenv("retry.interval");
+            String maxBackOffEnv = System.getenv("retry.maxBackOff");
+            this.retry.count = ( countEnv != null && !countEnv.trim().isEmpty() ) ?
+                            Integer.valueOf( countEnv ) :
+                            parsed.retry.count;
+            this.retry.interval = ( intervalEnv != null && !intervalEnv.trim().isEmpty() ) ?
+                            Long.valueOf( intervalEnv ) :
+                            parsed.retry.interval;
+            this.retry.maxBackOff = ( maxBackOffEnv != null && !maxBackOffEnv.trim().isEmpty() ) ?
+                            Long.valueOf( maxBackOffEnv ) :
+                            parsed.retry.maxBackOff;
 
             if ( parsed.services != null )
             {
@@ -161,6 +173,7 @@ public class ProxyConfiguration
             }
 
             md5Hex = md5;
+            logger.info( "Config loaded: {}", this );
         }
         catch ( IOException e )
         {
@@ -240,12 +253,14 @@ public class ProxyConfiguration
     {
         public int count;
 
-        public long interval; // in millis
+        public long interval; // millis
+
+        public long maxBackOff; // millis
 
         @Override
         public String toString()
         {
-            return "Retry{" + "count=" + count + ", interval=" + interval + '}';
+            return "Retry{" + "count=" + count + ", interval=" + interval + ", maxBackOff=" + maxBackOff + '}';
         }
 
     }
