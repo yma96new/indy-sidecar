@@ -130,6 +130,15 @@ public class Classifier
             span.setAttribute( "target.method", method.name() );
             span.setAttribute( "target.path", path );
         }
+        if ( otel.enabled() )
+        {
+            Span span = Span.current();
+            Span.current().setAttribute( "serviced", 1 );
+            span.setAttribute( "target.host", service.host );
+            span.setAttribute( "target.port", service.port );
+            span.setAttribute( "target.method", request.method().name() );
+            span.setAttribute( "target.path", path );
+        }
         return action.apply( getWebClient( service ), service );
     }
 
