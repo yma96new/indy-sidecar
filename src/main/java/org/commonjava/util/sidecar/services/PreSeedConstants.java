@@ -15,8 +15,18 @@
  */
 package org.commonjava.util.sidecar.services;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class PreSeedConstants
 {
+    // Vert.x event types
+    public static final String EVENT_PROXY_CONFIG_CHANGE = "proxy-config-change";
+
+    // Auto generated, ignore such upstream headers
+    public static final List<String> FORBIDDEN_HEADERS =
+                    Arrays.asList( "content-length", "connection", "transfer-encoding" );
+
     public static final String CONTENT_REST_BASE_PATH = "api/content";
 
     public static final String DEFAULT_REPO_PATH = System.getProperty( "user.home" ) + "/preSeedRepo";

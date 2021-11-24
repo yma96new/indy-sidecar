@@ -13,6 +13,20 @@ quarkus:
       -H:ResourceConfigurationFiles=resources-config.json
       -H:ReflectionConfigurationFiles=reflection-config.json
 
+  opentelemetry:
+    enabled: false
+    tracer:
+      exporter:
+        otlp:
+            # This is for sending to something like opentelemetry-collector
+#            endpoint: http://localhost:4317
+
+          # This is for sending to Honeycomb
+#            endpoint: "https://api.honeycomb.io:443"
+#            headers:
+#              - "X-honeycomb-team=<write-key>"
+#              - "X-honeycomb-dataset=test"
+
   # Logging (disable console on prod)
   log:
     level: INFO
@@ -31,16 +45,6 @@ quarkus:
         max-backup-index: 5
         max-file-size: 10M
 
-honeycomb:
-    enabled: false
-    dataset: indy-sidecar-test
-    write-key: test
-    base-sample-rate: 20
-    functions: |-
-      /api/content/.*|sidecar.content|20,
-      /api/folo/admin/.*|sidecar.folo.admin|1,
-      /api/folo/track/.*|sidecar.folo.content|1
-
 sidecar:
-    archive-api: http://localhost:8081/api/archive
-    local-repository: ${user.home}/preSeedRepo
+  archive-api: http://localhost:8081/api/archive
+  local-repository: ${user.home}/preSeedRepo
