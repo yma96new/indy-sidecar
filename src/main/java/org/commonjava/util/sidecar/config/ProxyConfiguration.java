@@ -18,8 +18,8 @@ package org.commonjava.util.sidecar.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -31,13 +31,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -48,9 +46,11 @@ import static org.commonjava.util.sidecar.services.ProxyConstants.EVENT_PROXY_CO
 @RegisterForReflection
 public class ProxyConfiguration
 {
-    private final Logger logger = LoggerFactory.getLogger( getClass() );
-
     public static final String USER_DIR = System.getProperty( "user.dir" ); // where the JVM was invoked
+
+    private static final String PROXY_YAML = "proxy.yaml";
+
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
     transient EventBus bus;
@@ -58,14 +58,16 @@ public class ProxyConfiguration
     @JsonProperty( "read-timeout" )
     private String readTimeout;
 
+    private volatile Retry retry;
+
+    private final Set<ServiceConfig> services = Collections.synchronizedSet( new HashSet<>() );
+
+    private transient String stateHash; // used to check whether the custom proxy.yaml has changed
+
     public String getReadTimeout()
     {
         return readTimeout;
     }
-
-    private volatile Retry retry;
-
-    private Set<ServiceConfig> services = Collections.synchronizedSet( new HashSet<>() );
 
     public Set<ServiceConfig> getServices()
     {
@@ -81,7 +83,7 @@ public class ProxyConfiguration
     public String toString()
     {
         return "ProxyConfiguration{" + "readTimeout='" + readTimeout + '\'' + ", retry=" + retry + ", services="
-                + services + '}';
+                        + services + '}';
     }
 
     @PostConstruct
@@ -90,8 +92,6 @@ public class ProxyConfiguration
         load( true );
         logger.info( "Proxy config, {}", this );
     }
-
-    private static final String PROXY_YAML = "proxy.yaml";
 
     /**
      * Load proxy config from '${user.dir}/config/proxy.yaml'. If not found, load from default classpath resource.
@@ -102,11 +102,11 @@ public class ProxyConfiguration
         if ( file.exists() )
         {
             logger.info( "Load proxy config from file, {}", file );
-            try
+            try (FileInputStream fis = new FileInputStream( file ))
             {
-                doLoad( new FileInputStream( file ) );
+                doLoad( fis );
             }
-            catch ( FileNotFoundException e )
+            catch ( IOException e )
             {
                 logger.error( "Load failed", e );
             }
@@ -126,15 +126,13 @@ public class ProxyConfiguration
         }
     }
 
-    private transient String md5Hex; // used to check whether the custom proxy.yaml has changed
-
     private void doLoad( InputStream res )
     {
         try
         {
             String str = IOUtils.toString( res, UTF_8 );
-            String md5 = DigestUtils.md5Hex( str ).toUpperCase();
-            if ( md5.equals( md5Hex ) )
+            String nextStateHash = DigestUtils.sha256Hex( str ).toUpperCase();
+            if ( nextStateHash.equals( stateHash ) )
             {
                 logger.info( "Skip, NO_CHANGE" );
                 return;
@@ -149,9 +147,9 @@ public class ProxyConfiguration
             }
 
             this.retry = parsed.retry;
-            String countEnv = System.getenv( "retry.count");
-            String intervalEnv = System.getenv("retry.interval");
-            String maxBackOffEnv = System.getenv("retry.maxBackOff");
+            String countEnv = System.getenv( "retry_count" );
+            String intervalEnv = System.getenv( "retry_interval" );
+            String maxBackOffEnv = System.getenv( "retry_maxBackOff" );
             this.retry.count = ( countEnv != null && !countEnv.trim().isEmpty() ) ?
                             Integer.valueOf( countEnv ) :
                             parsed.retry.count;
@@ -167,12 +165,12 @@ public class ProxyConfiguration
                 parsed.services.forEach( this::overrideIfPresent );
             }
 
-            if ( md5Hex != null )
+            if ( stateHash != null )
             {
                 bus.publish( EVENT_PROXY_CONFIG_CHANGE, "" );
             }
 
-            md5Hex = md5;
+            stateHash = nextStateHash;
             logger.info( "Config loaded: {}", this );
         }
         catch ( IOException e )
@@ -193,59 +191,12 @@ public class ProxyConfiguration
         Map<String, Object> obj = yaml.load( str );
         Map<String, Object> proxy = (Map) obj.get( "proxy" );
         JsonObject jsonObject = JsonObject.mapFrom( proxy );
-        ProxyConfiguration ret = jsonObject.mapTo( this.getClass() );
+        ProxyConfiguration ret = jsonObject.mapTo( ProxyConfiguration.class );
         if ( ret.services != null )
         {
             ret.services.forEach( ServiceConfig::normalize );
         }
         return ret;
-    }
-
-    @RegisterForReflection
-    public static class ServiceConfig
-    {
-        public String host;
-
-        public int port;
-
-        public boolean ssl;
-
-        public String methods;
-
-        @JsonProperty( "path-pattern" )
-        public String pathPattern;
-
-        @Override
-        public boolean equals( Object o )
-        {
-            if ( this == o )
-                return true;
-            if ( o == null || getClass() != o.getClass() )
-                return false;
-            ServiceConfig that = (ServiceConfig) o;
-            return Objects.equals( methods, that.methods ) && pathPattern.equals( that.pathPattern );
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash( methods, pathPattern );
-        }
-
-        @Override
-        public String toString()
-        {
-            return "ServiceConfig{" + "host='" + host + '\'' + ", port=" + port + ", ssl=" + ssl + ", methods='"
-                    + methods + '\'' + ", pathPattern='" + pathPattern + '\'' + '}';
-        }
-
-        private void normalize()
-        {
-            if ( methods != null )
-            {
-                methods = methods.toUpperCase();
-            }
-        }
     }
 
     @RegisterForReflection
