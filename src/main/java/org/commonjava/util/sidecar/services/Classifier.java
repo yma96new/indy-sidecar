@@ -51,13 +51,13 @@ public class Classifier
 
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
+    private final Map<ServiceConfig, WebClientAdapter> clientMap = new ConcurrentHashMap<>();
+
     @Inject
     ProxyConfiguration proxyConfiguration;
 
     @Inject
     OtelAdapter otel;
-
-    private final Map<ServiceConfig, WebClientAdapter> clientMap = new ConcurrentHashMap<>();
 
     @PostConstruct
     void init()
@@ -98,8 +98,8 @@ public class Classifier
         return classifyAnd( path, request.method(), action );
     }
 
-    public <R> R classifyAnd( String path, HttpMethod method,
-                              BiFunction<WebClientAdapter, ServiceConfig, R> action ) throws Exception
+    public <R> R classifyAnd( String path, HttpMethod method, BiFunction<WebClientAdapter, ServiceConfig, R> action )
+                    throws Exception
     {
         if ( otel.enabled() )
         {
@@ -133,7 +133,7 @@ public class Classifier
         return action.apply( getWebClient( service ), service );
     }
 
-    private ServiceConfig getServiceConfig( String path, HttpMethod method ) throws Exception
+    private ServiceConfig getServiceConfig( String path, HttpMethod method )
     {
         ServiceConfig service = null;
 

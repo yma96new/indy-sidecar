@@ -52,6 +52,8 @@ public class ProxyConfiguration
 
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
+    private final Set<ServiceConfig> services = Collections.synchronizedSet( new HashSet<>() );
+
     @Inject
     transient EventBus bus;
 
@@ -62,8 +64,6 @@ public class ProxyConfiguration
     private String readTimeout;
 
     private volatile Retry retry;
-
-    private final Set<ServiceConfig> services = Collections.synchronizedSet( new HashSet<>() );
 
     private transient String stateHash; // used to check whether the custom proxy.yaml has changed
 

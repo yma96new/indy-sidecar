@@ -18,6 +18,8 @@ package org.commonjava.util.sidecar.services;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
+import kotlin.Pair;
+import org.apache.commons.io.IOUtils;
 import org.commonjava.util.sidecar.config.ProxyConfiguration;
 import org.commonjava.util.sidecar.interceptor.ExceptionHandler;
 import org.commonjava.util.sidecar.model.AccessChannel;
@@ -37,15 +39,17 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static io.vertx.core.http.impl.HttpUtils.normalizePath;
+import static io.vertx.core.http.HttpMethod.HEAD;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.CONTENT_REST_BASE_PATH;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FORBIDDEN_HEADERS;
 import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
+import static org.commonjava.util.sidecar.util.SidecarUtils.normalizePathAnd;
 
 @ApplicationScoped
 @ExceptionHandler
@@ -115,36 +119,20 @@ public class ProxyService
 
     public Uni<Response> doPut( String path, InputStream is, HttpServerRequest request ) throws Exception
     {
-        TrackedContentEntry entry = null;
         if ( getBuildConfigId() != null )
         {
-            entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
-                                             AccessChannel.NATIVE,
-                                             "http://" + proxyConfiguration.getServices().iterator().next().host + "/"
-                                                             + path, path, StoreEffect.UPLOAD, (long) bytes.length, "",
-                                             "", "" );
-
-            MessageDigest message;
-            try
-            {
-                message = MessageDigest.getInstance( "MD5" );
-                message.update( bytes );
-                entry.setMd5( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-                message = MessageDigest.getInstance( "SHA-1" );
-                message.update( bytes );
-                entry.setSha1( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-                message = MessageDigest.getInstance( "SHA-256" );
-                message.update( bytes );
-                entry.setSha256( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-                reportService.appendUpload( entry );
-            }
-            catch ( NoSuchAlgorithmException e )
-            {
-                logger.warn( "Bytes hash calculation failed for request" );
-            }
+            byte[] bytes = IOUtils.toByteArray( is );
+            TrackedContentEntry entry =
+                            new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
+                                                     AccessChannel.NATIVE,
+                                                     "http://" + proxyConfiguration.getServices().iterator().next().host
+                                                                     + "/" + path, path, StoreEffect.UPLOAD,
+                                                     (long) bytes.length, "", "", "" );
+            updateMessageDigest( bytes, entry );
+            reportService.appendUpload( entry );
         }
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                        client.put( p, is, request ).call(), request.method(), entry ) ) );
+                        client.put( p, is, request ).call(), request.method() ) ) );
     }
 
     public Uni<Response> doDelete( String path, HttpServerRequest request ) throws Exception
@@ -192,39 +180,47 @@ public class ProxyService
                 builder.header( header.getFirst(), header.getSecond() );
             }
         } );
-        if ( resp.body() != null )
+        if ( resp.body() != null && entry != null )
         {
-            byte[] bytes = resp.body().getBytes();
-            if ( entry != null )
+            byte[] bytes = new byte[0];
+            try
             {
-                entry.setSize( (long) bytes.length );
-                String[] headers = resp.getHeader( "indy-origin" ).split( ":" );
-                entry.setOriginUrl(
-                                "http://" + proxyConfiguration.getServices().iterator().next().host + "/api/content/"
-                                                + headers[0] + "/" + headers[1] + "/" + headers[2] + entry.getPath() );
-                MessageDigest message;
-                try
-                {
-                    message = MessageDigest.getInstance( "MD5" );
-                    message.update( bytes );
-                    entry.setMd5( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-                    message = MessageDigest.getInstance( "SHA-1" );
-                    message.update( bytes );
-                    entry.setSha1( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-                    message = MessageDigest.getInstance( "SHA-256" );
-                    message.update( bytes );
-                    entry.setSha256( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-                    reportService.appendDownload( entry );
-                }
-                catch ( NoSuchAlgorithmException e )
-                {
-                    logger.warn( "Bytes hash calculation failed for request" );
-                }
+                bytes = resp.body().bytes();
             }
-            builder.entity( bytes );
+            catch ( IOException e )
+            {
+                logger.error( "Failed to read bytes from okhttp response", e );
+            }
+            entry.setSize( (long) bytes.length );
+            String[] headers = resp.header( "indy-origin" ).split( ":" );
+            entry.setOriginUrl( "http://" + proxyConfiguration.getServices().iterator().next().host + "/api/content/"
+                                                + headers[0] + "/" + headers[1] + "/" + headers[2] + entry.getPath() );
+            updateMessageDigest( bytes, entry );
+            reportService.appendDownload( entry );
         }
         builder.entity( new ProxyStreamingOutput( resp.body().byteStream(), otel ) );
         return builder.build();
+    }
+
+    private void updateMessageDigest( byte[] bytes, TrackedContentEntry entry )
+    {
+        MessageDigest message;
+        try
+        {
+            message = MessageDigest.getInstance( "MD5" );
+            message.update( bytes );
+            entry.setMd5( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
+            message = MessageDigest.getInstance( "SHA-1" );
+            message.update( bytes );
+            entry.setSha1( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
+            message = MessageDigest.getInstance( "SHA-256" );
+            message.update( bytes );
+            entry.setSha256( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
+        }
+        catch ( NoSuchAlgorithmException e )
+        {
+            logger.warn( "Bytes hash calculation failed for request" );
+        }
     }
 
     private boolean isHeaderAllowed( Pair<? extends String, ? extends String> header, HttpMethod method )
@@ -237,21 +233,10 @@ public class ProxyService
         return !FORBIDDEN_HEADERS.contains( key.toLowerCase() );
     }
 
-    private <R> R normalizePathAnd( String path, CheckedFunction<String, R> action ) throws Exception
-    {
-        return action.apply( normalizePath( path ) );
-    }
-
     private StoreKey generateStoreKey( String path )
     {
         String[] elements = path.split( "/" );
         return new StoreKey( elements[2], StoreType.valueOf( elements[3] ), elements[4] );
-    }
-
-    @FunctionalInterface
-    private interface CheckedFunction<T, R>
-    {
-        R apply( T t ) throws Exception;
     }
 
 }

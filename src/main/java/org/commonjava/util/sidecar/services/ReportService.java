@@ -19,8 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.http.HttpServerRequest;
 import org.commonjava.util.sidecar.config.SidecarConfig;
 import org.commonjava.util.sidecar.model.AccessChannel;
 import org.commonjava.util.sidecar.model.StoreEffect;
@@ -36,8 +35,10 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import java.util.HashMap;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO_PATH;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
 import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
+import static org.commonjava.util.sidecar.util.SidecarUtils.normalizePathAnd;
 
 @Startup
 @ApplicationScoped
@@ -130,18 +132,18 @@ public class ReportService
                                                  entryDTO.getSha1(), entryDTO.getSha256() ) );
     }
 
-    public Uni<Response> exportReport() throws Exception
+    public Uni<Response> importReport( final HttpServerRequest request ) throws Exception
     {
         //Change here when we decide indy import API
-        String path = "/api/folo/admin/report/import";
+        String path = "api/folo/admin/report/import";
 
-        return classifier.classifyAnd( path, HttpMethod.PUT, ( client, service ) -> proxyService.wrapAsyncCall(
-                        client.put( path ).sendJsonObject( exportReportJson() ), null ) );
-    }
-
-    private JsonObject exportReportJson()
-    {
-        return JsonObject.mapFrom( trackedContent );
+        ObjectMapper mapper = new ObjectMapper();
+        InputStream is = new ByteArrayInputStream( mapper.writeValueAsBytes( trackedContent ) );
+        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
+                                                                    ( client, service ) -> proxyService.wrapAsyncCall(
+                                                                                    client.put( path, is, request )
+                                                                                          .call(),
+                                                                                    request.method() ) ) );
     }
 
     public void clearReport()

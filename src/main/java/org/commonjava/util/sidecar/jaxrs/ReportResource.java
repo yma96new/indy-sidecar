@@ -1,6 +1,7 @@
 package org.commonjava.util.sidecar.jaxrs;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpServerRequest;
 import org.commonjava.util.sidecar.model.TrackedContent;
 import org.commonjava.util.sidecar.services.ReportService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -11,8 +12,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -37,15 +40,15 @@ public class ReportResource
         return reportService.getTrackedContent(); //this will automatically serialized by jackson
     }
 
-    @Operation( description = "export tracking report content to configured indy" )
-    @APIResponse( responseCode = "200", description = "Tracking report exported" )
+    @Operation( description = "Import tracking report content to configured indy" )
+    @APIResponse( responseCode = "201", description = "Tracking report imported" )
     @APIResponse( responseCode = "404", description = "No tracking report found" )
-    @Path( "/export" )
+    @Path( "/import" )
     @Produces( TEXT_PLAIN )
-    @GET
-    public Uni<Response> exportGet() throws Exception
+    @PUT
+    public Uni<Response> importReport( final @Context HttpServerRequest request ) throws Exception
     {
-        return reportService.exportReport();
+        return reportService.importReport( request );
     }
 
     @Operation( description = "Delete tracking report content from memory" )
