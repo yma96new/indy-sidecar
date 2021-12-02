@@ -51,7 +51,7 @@ public class AbstractSidecarFuncTest
         File tracked = new File( DEFAULT_REPO_PATH, SUCCESS_BUILD );
         FileUtils.write( tracked, new String( TRACKED_CONTENT.getBytes() ), "UTF-8" );
 
-        File jar = new File( DEFAULT_REPO_PATH + REPO, PATH );
+        File jar = new File( DEFAULT_REPO_PATH, PATH );
         FileUtils.write( jar, new String( getBytes( SIZE_50K ) ), "UTF-8" );
     }
 
@@ -65,7 +65,7 @@ public class AbstractSidecarFuncTest
     {
         List<File> files = new ArrayList<>();
         files.add( new File( DEFAULT_REPO_PATH, SUCCESS_BUILD ) );
-        files.add( new File( DEFAULT_REPO_PATH + REPO, PATH ) );
+        files.add( new File( DEFAULT_REPO_PATH, PATH ) );
         for ( File target : files )
         {
             if ( target.exists() )
