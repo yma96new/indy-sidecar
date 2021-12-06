@@ -56,6 +56,8 @@ public class ArchiveRetrieveService
 
     private final static String MAVEN_META = "maven-metadata.xml";
 
+    private final static String NPM_META = "package.json";
+
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
@@ -142,7 +144,8 @@ public class ArchiveRetrieveService
 
     public boolean shouldProxy( final String path )
     {
-        return getBuildConfigId() == null || getBuildConfigId().trim().isEmpty() || path.endsWith( MAVEN_META );
+        return getBuildConfigId() == null || getBuildConfigId().trim().isEmpty() || path.endsWith( MAVEN_META )
+                        || path.endsWith( NPM_META );
     }
 
     public String getBuildConfigId()

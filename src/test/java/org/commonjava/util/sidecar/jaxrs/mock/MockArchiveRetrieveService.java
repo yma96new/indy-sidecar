@@ -18,6 +18,7 @@ package org.commonjava.util.sidecar.jaxrs.mock;
 import org.apache.commons.io.FileUtils;
 import org.commonjava.util.sidecar.services.ArchiveRetrieveService;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Alternative;
 import java.io.File;
@@ -33,6 +34,7 @@ public class MockArchiveRetrieveService
                 extends ArchiveRetrieveService
 {
     @Override
+    @PostConstruct
     public void init()
     {
         super.init();
@@ -56,7 +58,7 @@ public class MockArchiveRetrieveService
             new File( tgz.getParent() ).mkdirs();
             FileUtils.write( tgz, new String( getBytes( SIZE_50K ) ), "UTF-8" );
 
-            String npmMetaPath = "/@babel/code-frame";
+            String npmMetaPath = "/@babel/code-frame/package.json";
             File npmMetadata = new File( DEFAULT_REPO_PATH + npmMetaPath );
             new File( npmMetadata.getParent() ).mkdirs();
             FileUtils.write( npmMetadata, new String( getBytes( SIZE_50K ) ), "UTF-8" );

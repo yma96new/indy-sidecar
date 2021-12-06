@@ -34,7 +34,7 @@ public class NPMDownloadFromArchiveTest
     {
         // do npm metadata proxy no matter it exists locally or not
         given().when()
-               .get( "/api/folo/track/2021/npm/group/npmjs/@babel/code-frame" )
+               .get( "/api/folo/track/2021/npm/group/npmjs/@babel/code-frame/package.json" )
                .then()
                .statusCode( NOT_FOUND.getStatusCode() );
     }
