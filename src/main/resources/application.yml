@@ -14,7 +14,7 @@ quarkus:
       -H:ReflectionConfigurationFiles=reflection-config.json
 
   opentelemetry:
-    enabled: false
+    enabled: true
     tracer:
       exporter:
         otlp:
