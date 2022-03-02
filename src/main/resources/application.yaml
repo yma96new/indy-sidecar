@@ -1,5 +1,9 @@
 quarkus:
   http:
+    ssl:
+      certificate:
+        file: ssl/tls.crt
+        key-file: ssl/tls.key
     port: 8080
     read-timeout: 30m
     limits:
