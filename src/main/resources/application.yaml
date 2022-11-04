@@ -11,6 +11,8 @@ quarkus:
 
   opentelemetry:
     enabled: true
+    propagators:
+      - envar
     tracer:
       exporter:
         otlp:
