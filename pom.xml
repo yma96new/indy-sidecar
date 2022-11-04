@@ -67,6 +67,11 @@
   </dependencyManagement>
   <dependencies>
     <dependency>
+      <groupId>com.redhat.resilience.otel</groupId>
+      <artifactId>opentelemetry-ext-cli-java</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>okhttp</artifactId>
     </dependency>
