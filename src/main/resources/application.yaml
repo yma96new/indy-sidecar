@@ -1,4 +1,6 @@
 quarkus:
+  package:
+    type: uber-jar
   http:
 #    ssl:
 #      certificate:
