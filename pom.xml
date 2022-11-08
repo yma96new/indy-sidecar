@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 
-    Copyright (C) 2011-2021 Red Hat, Inc. (https://github.com/Commonjava/indy-sidecar)
+    Copyright (C) 2011-2022 Red Hat, Inc. (https://github.com/Commonjava/indy-sidecar)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@
   <artifactId>sidecar</artifactId>
   <version>1.0.1-SNAPSHOT</version>
   <name>Sidecar :: Project Root</name>
-  <inceptionYear>2011-2021</inceptionYear>
+  <inceptionYear>2011-2022</inceptionYear>
   <scm>
     <connection>scm:git:https://github.com/commonjava/indy-sidecar</connection>
     <developerConnection>scm:git:https://github.com/commonjava/indy-sidecar</developerConnection>
