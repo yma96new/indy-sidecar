@@ -59,7 +59,12 @@ pipeline {
             }
         }
         stage('Deploy') {
-            when { branch 'master' }
+            when {
+                anyOf {
+                    branch 'master'
+                    branch 'blackbox'
+                }
+            }
             steps {
                 echo "Deploy"
                 sh '${M2_HOME}/bin/mvn help:effective-settings -B -V clean deploy -e -DskipTests'
