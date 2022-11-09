@@ -24,8 +24,8 @@
     <artifactId>service-parent</artifactId>
     <version>1</version>
   </parent>
-  <groupId>org.commonjava.utils</groupId>
-  <artifactId>indy-sidecar</artifactId>
+  <groupId>org.commonjava.util</groupId>
+  <artifactId>sidecar</artifactId>
   <version>1.1.0-SNAPSHOT</version>
   <name>Sidecar :: Project Root</name>
   <inceptionYear>2011-2021</inceptionYear>
