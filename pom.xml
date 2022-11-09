@@ -16,8 +16,7 @@
     limitations under the License.
 
 -->
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.commonjava</groupId>
@@ -26,13 +25,14 @@
   </parent>
   <groupId>org.commonjava.util</groupId>
   <artifactId>sidecar</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Sidecar :: Project Root</name>
   <inceptionYear>2011-2021</inceptionYear>
   <scm>
     <connection>scm:git:https://github.com/commonjava/indy-sidecar</connection>
     <developerConnection>scm:git:https://github.com/commonjava/indy-sidecar</developerConnection>
     <url>https://github.com/Commonjava/indy-sidecar</url>
+    <tag>indy-sidecar-1.0.0</tag>
   </scm>
   <properties>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
