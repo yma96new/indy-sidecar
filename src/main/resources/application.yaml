@@ -1,4 +1,6 @@
 quarkus:
+  package:
+    type: uber-jar
   http:
 #    ssl:
 #      certificate:
@@ -11,6 +13,8 @@ quarkus:
 
   opentelemetry:
     enabled: true
+    propagators:
+      - envar
     tracer:
       exporter:
         otlp:
