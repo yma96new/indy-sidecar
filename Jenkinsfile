@@ -60,9 +60,9 @@ pipeline {
         }
         stage('Deploy') {
             when {
-                anyOf {
-                    branch 'master'
-                    branch 'blackbox'
+                allOf {
+                    expression { my_bc != null }
+                    expression { env.CHANGE_ID == null } // Not Pull request
                 }
             }
             steps {
