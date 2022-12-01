@@ -11,7 +11,7 @@ quarkus:
     limits:
       max-body-size: 500M
   resteasy:
-    gizp:
+    gzip:
       enabled: true
       max-input: 1024M
 
