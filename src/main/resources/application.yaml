@@ -9,11 +9,11 @@ quarkus:
     port: 8080
     read-timeout: 30m
     limits:
-      max-body-size: 500M
-  resteasy:
-    gzip:
-      enabled: true
-      max-input: 1024M
+      max-body-size: 1024M
+#  resteasy:
+#    gzip:
+#      enabled: true
+#      max-input: 1024M
 
   opentelemetry:
     enabled: true
