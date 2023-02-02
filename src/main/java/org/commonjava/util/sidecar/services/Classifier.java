@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2021 Red Hat, Inc. (https://github.com/Commonjava/indy-sidecar)
+ * Copyright (C) 2011-2022 Red Hat, Inc. (https://github.com/Commonjava/indy-sidecar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,6 +120,15 @@ public class Classifier
             }
 
             throw new ServiceNotFoundException( "Service not found, path: " + path + ", method: " + method );
+        }
+        if ( otel.enabled() )
+        {
+            Span span = Span.current();
+            Span.current().setAttribute( "serviced", 1 );
+            span.setAttribute( "target.host", service.host );
+            span.setAttribute( "target.port", service.port );
+            span.setAttribute( "target.method", method.name() );
+            span.setAttribute( "target.path", path );
         }
         if ( otel.enabled() )
         {

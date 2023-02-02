@@ -1,0 +1,54 @@
+quarkus:
+  package:
+    type: uber-jar
+  http:
+    #    ssl:
+    #      certificate:
+    #        file: /deployments/ssl/tls.crt
+    #        key-file: /deployments/ssl/tls.key
+    port: 8080
+    read-timeout: 30m
+    limits:
+      max-body-size: 1024M
+  #  resteasy:
+  #    gzip:
+  #      enabled: true
+  #      max-input: 1024M
+
+  opentelemetry:
+    enabled: true
+    propagators:
+      - envar
+    tracer:
+      exporter:
+        otlp:
+        # This is for sending to something like opentelemetry-collector
+        #            endpoint: http://localhost:4317
+
+        # This is for sending to Honeycomb
+  #            endpoint: "https://api.honeycomb.io:443"
+  #            headers:
+  #              - "X-honeycomb-team=<write-key>"
+  #              - "X-honeycomb-dataset=test"
+
+  # Logging (disable console on prod)
+  log:
+    level: INFO
+    category:
+      "org.commonjava.util.sidecar":
+        level: DEBUG
+    console:
+      level: DEBUG
+      enable: true
+    file:
+      enable: true
+      path: "log/sidecar.log"
+      level: DEBUG
+      format: "%d{HH:mm:ss} %-5p [%c{2.}] (%t) %s%e%n"
+      rotation:
+        max-backup-index: 5
+        max-file-size: 10M
+
+sidecar:
+  archive-api: http://localhost:8081/api/archive
+  local-repository: ${user.home}/preSeedRepo

@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.commonjava.util.sidecar.interceptor;
+package org.commonjava.util.sidecar.util;
 
-import javax.interceptor.InterceptorBinding;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.time.Duration;
 
-@InterceptorBinding
-@Target( { TYPE, METHOD } )
-@Retention( RUNTIME )
-public @interface ExceptionHandler
+public class ServiceUtils
 {
+    private final static Logger logger = LoggerFactory.getLogger( ServiceUtils.class );
+
+    public static long parseTimeout( String timeout )
+    {
+        return Duration.parse( "pt" + timeout ).toMillis();
+    }
 }
