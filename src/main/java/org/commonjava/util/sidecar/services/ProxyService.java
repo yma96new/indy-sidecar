@@ -39,7 +39,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -180,25 +179,10 @@ public class ProxyService
                 builder.header( header.getFirst(), header.getSecond() );
             }
         } );
-        if ( resp.body() != null && entry != null )
-        {
-            byte[] bytes = new byte[0];
-            try
-            {
-                bytes = resp.body().bytes();
-            }
-            catch ( IOException e )
-            {
-                logger.error( "Failed to read bytes from okhttp response", e );
-            }
-            entry.setSize( (long) bytes.length );
-            String[] headers = resp.header( "indy-origin" ).split( ":" );
-            entry.setOriginUrl( "http://" + proxyConfiguration.getServices().iterator().next().host + "/api/content/"
-                                                + headers[0] + "/" + headers[1] + "/" + headers[2] + entry.getPath() );
-            updateMessageDigest( bytes, entry );
-            reportService.appendDownload( entry );
-        }
-        builder.entity( new ProxyStreamingOutput( resp.body().byteStream(), otel ) );
+        String indyOrigin = resp.header( "indy-origin" );
+        String serviceOrigin = "http://" + proxyConfiguration.getServices().iterator().next().host;
+        builder.entity( new ProxyStreamingOutput( resp.body(), entry, serviceOrigin, indyOrigin, reportService,
+                                                  otel ) );
         return builder.build();
     }
 
