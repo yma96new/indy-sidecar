@@ -19,7 +19,6 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import kotlin.Pair;
-import org.apache.commons.io.IOUtils;
 import org.commonjava.util.sidecar.config.ProxyConfiguration;
 import org.commonjava.util.sidecar.interceptor.ExceptionHandler;
 import org.commonjava.util.sidecar.model.AccessChannel;
@@ -38,10 +37,7 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
-import javax.xml.bind.DatatypeConverter;
 import java.io.InputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import static io.vertx.core.http.HttpMethod.HEAD;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
@@ -96,7 +92,7 @@ public class ProxyService
             entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
                                              AccessChannel.NATIVE, "",
                                              "/" + path.replaceFirst( "^\\/?(\\w+\\/){5}", "" ), StoreEffect.DOWNLOAD,
-                                             (long) 0, "", "", "" );
+                                             0l, "", "", "" );
         }
         TrackedContentEntry finalEntry = entry;
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
@@ -118,20 +114,17 @@ public class ProxyService
 
     public Uni<Response> doPut( String path, InputStream is, HttpServerRequest request ) throws Exception
     {
+        TrackedContentEntry entry = null;
         if ( getBuildConfigId() != null )
         {
-            byte[] bytes = IOUtils.toByteArray( is );
-            TrackedContentEntry entry =
-                            new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
-                                                     AccessChannel.NATIVE,
-                                                     "http://" + proxyConfiguration.getServices().iterator().next().host
-                                                                     + "/" + path, path, StoreEffect.UPLOAD,
-                                                     (long) bytes.length, "", "", "" );
-            updateMessageDigest( bytes, entry );
-            reportService.appendUpload( entry );
+            entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
+                                             AccessChannel.NATIVE,
+                                             "http://" + proxyConfiguration.getServices().iterator().next().host + "/"
+                                                             + path, path, StoreEffect.UPLOAD, 0l, "", "", "" );
         }
+        TrackedContentEntry finalEntry = entry;
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                        client.put( p, is, request ).call(), request.method() ) ) );
+                        client.put( p, is, request ).call(), request.method(), finalEntry ) ) );
     }
 
     public Uni<Response> doDelete( String path, HttpServerRequest request ) throws Exception
@@ -184,27 +177,6 @@ public class ProxyService
         builder.entity( new ProxyStreamingOutput( resp.body(), entry, serviceOrigin, indyOrigin, reportService,
                                                   otel ) );
         return builder.build();
-    }
-
-    private void updateMessageDigest( byte[] bytes, TrackedContentEntry entry )
-    {
-        MessageDigest message;
-        try
-        {
-            message = MessageDigest.getInstance( "MD5" );
-            message.update( bytes );
-            entry.setMd5( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-            message = MessageDigest.getInstance( "SHA-1" );
-            message.update( bytes );
-            entry.setSha1( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-            message = MessageDigest.getInstance( "SHA-256" );
-            message.update( bytes );
-            entry.setSha256( DatatypeConverter.printHexBinary( message.digest() ).toLowerCase() );
-        }
-        catch ( NoSuchAlgorithmException e )
-        {
-            logger.warn( "Bytes hash calculation failed for request" );
-        }
     }
 
     private boolean isHeaderAllowed( Pair<? extends String, ? extends String> header, HttpMethod method )
