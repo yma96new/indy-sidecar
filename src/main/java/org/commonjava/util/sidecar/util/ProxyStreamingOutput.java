@@ -19,6 +19,7 @@ import io.opentelemetry.api.trace.Span;
 import okhttp3.ResponseBody;
 import okio.BufferedSource;
 import org.apache.commons.io.output.CountingOutputStream;
+import org.commonjava.util.sidecar.model.StoreEffect;
 import org.commonjava.util.sidecar.model.TrackedContentEntry;
 import org.commonjava.util.sidecar.services.ReportService;
 import org.slf4j.Logger;
@@ -134,8 +135,14 @@ public class ProxyStreamingOutput
                     if ( digests.containsKey( SHA256 ) )
                         entry.setSha256( DatatypeConverter.printHexBinary( digests.get( SHA256 ).digest() )
                                                           .toLowerCase() );
-
-                    reportService.appendDownload( entry );
+                    if ( entry.getEffect().equals( StoreEffect.DOWNLOAD ) )
+                    {
+                        reportService.appendDownload( entry );
+                    }
+                    else
+                    {
+                        reportService.appendUpload( entry );
+                    }
                 }
             }
             finally
