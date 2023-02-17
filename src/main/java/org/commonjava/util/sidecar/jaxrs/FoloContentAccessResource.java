@@ -79,7 +79,7 @@ public class FoloContentAccessResource
         if ( archiveService.shouldProxy( path ) )
         {
             logger.debug( "Get proxy resource for folo request: {}", path );
-            return proxyService.doGet( packageType, type, name, path, request );
+            return proxyService.doGet( id, packageType, type, name, path, request );
         }
 
         Optional<File> download = archiveService.getLocally( path );
@@ -93,7 +93,7 @@ public class FoloContentAccessResource
         }
         else
         {
-            return proxyService.doGet( packageType, type, name, path, request );
+            return proxyService.doGet( id, packageType, type, name, path, request );
         }
     }
 
@@ -112,7 +112,7 @@ public class FoloContentAccessResource
                                final @Context HttpServerRequest request ) throws Exception
     {
         logger.debug( "Head proxy resource for folo request: {}", path );
-        return proxyService.doHead( packageType, type, name, path, request );
+        return proxyService.doHead( id, packageType, type, name, path, request );
     }
 
     @Operation( description = "Store artifact content under the given artifact store (type/name) and path." )
@@ -130,6 +130,6 @@ public class FoloContentAccessResource
                               final @Context HttpServerRequest request ) throws Exception
     {
         logger.debug( "Put proxy resource for folo request: {}", path );
-        return proxyService.doPut( packageType, type, name, path, is, request );
+        return proxyService.doPut( id, packageType, type, name, path, is, request );
     }
 }

@@ -27,7 +27,7 @@ public class PreSeedConstants
     public static final List<String> FORBIDDEN_HEADERS =
                     Arrays.asList( "content-length", "connection", "transfer-encoding" );
 
-    public static final String CONTENT_REST_BASE_PATH = "api/content";
+    public static final String FOLO_TRACK_REST_BASE_PATH = "api/folo/track";
 
     public static final String DEFAULT_REPO_PATH = System.getProperty( "user.home" ) + "/preSeedRepo";
 
