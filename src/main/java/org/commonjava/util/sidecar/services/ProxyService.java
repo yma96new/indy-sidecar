@@ -41,7 +41,7 @@ import java.io.InputStream;
 
 import static io.vertx.core.http.HttpMethod.HEAD;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static org.commonjava.util.sidecar.services.PreSeedConstants.CONTENT_REST_BASE_PATH;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_TRACK_REST_BASE_PATH;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FORBIDDEN_HEADERS;
 import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
 import static org.commonjava.util.sidecar.util.SidecarUtils.normalizePathAnd;
@@ -64,10 +64,10 @@ public class ProxyService
     @Inject
     ReportService reportService;
 
-    public Uni<Response> doHead( String packageType, String type, String name, String path, HttpServerRequest request )
-                    throws Exception
+    public Uni<Response> doHead( String trackingId, String packageType, String type, String name, String path,
+                                 HttpServerRequest request ) throws Exception
     {
-        String contentPath = UrlUtils.buildUrl( CONTENT_REST_BASE_PATH, packageType, type, name, path );
+        String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
         return doHead( contentPath, request );
     }
 
@@ -77,10 +77,10 @@ public class ProxyService
                         client.head( p, request ).call(), request.method() ) ) );
     }
 
-    public Uni<Response> doGet( String packageType, String type, String name, String path, HttpServerRequest request )
-                    throws Exception
+    public Uni<Response> doGet( String trackingId, String packageType, String type, String name, String path,
+                                HttpServerRequest request ) throws Exception
     {
-        String contentPath = UrlUtils.buildUrl( CONTENT_REST_BASE_PATH, packageType, type, name, path );
+        String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
         return doGet( contentPath, request );
     }
 
@@ -92,7 +92,7 @@ public class ProxyService
             entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
                                              AccessChannel.NATIVE, "",
                                              "/" + path.replaceFirst( "^\\/?(\\w+\\/){5}", "" ), StoreEffect.DOWNLOAD,
-                                             0l, "", "", "" );
+                                             0L, "", "", "" );
         }
         TrackedContentEntry finalEntry = entry;
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
@@ -105,10 +105,10 @@ public class ProxyService
                         client.post( p, is, request ).call(), request.method() ) ) );
     }
 
-    public Uni<Response> doPut( String packageType, String type, String name, String path, InputStream is,
-                                HttpServerRequest request ) throws Exception
+    public Uni<Response> doPut( String trackingId, String packageType, String type, String name, String path,
+                                InputStream is, HttpServerRequest request ) throws Exception
     {
-        String contentPath = UrlUtils.buildUrl( CONTENT_REST_BASE_PATH, packageType, type, name, path );
+        String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
         return doPut( contentPath, is, request );
     }
 
@@ -120,7 +120,7 @@ public class ProxyService
             entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
                                              AccessChannel.NATIVE,
                                              "http://" + proxyConfiguration.getServices().iterator().next().host + "/"
-                                                             + path, path, StoreEffect.UPLOAD, 0l, "", "", "" );
+                                                             + path, path, StoreEffect.UPLOAD, 0L, "", "", "" );
         }
         TrackedContentEntry finalEntry = entry;
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
