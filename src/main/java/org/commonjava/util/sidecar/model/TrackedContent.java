@@ -22,8 +22,6 @@ import java.io.ObjectOutput;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
-
 public class TrackedContent
                 implements Externalizable
 {
@@ -36,7 +34,6 @@ public class TrackedContent
 
     public TrackedContent()
     {
-        this.key = new TrackingKey( getBuildConfigId() == null ? "unknown" : getBuildConfigId() );
     }
 
     public TrackedContent( final TrackingKey key, final Set<TrackedContentEntry> uploads,

@@ -148,6 +148,9 @@ public class ArchiveRetrieveService
                         || path.endsWith( NPM_META );
     }
 
+    /**
+     * This is used for mock testing of BuildConfigIdEnvMock
+     */
     public String getBuildConfigId()
     {
         return System.getenv( BUILD_CONFIG_ID );

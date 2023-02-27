@@ -43,7 +43,6 @@ import static io.vertx.core.http.HttpMethod.HEAD;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_TRACK_REST_BASE_PATH;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FORBIDDEN_HEADERS;
-import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
 import static org.commonjava.util.sidecar.util.SidecarUtils.normalizePathAnd;
 
 @ApplicationScoped
@@ -81,16 +80,21 @@ public class ProxyService
                                 HttpServerRequest request ) throws Exception
     {
         String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
-        return doGet( contentPath, request );
+        return doGet( contentPath, request, trackingId, new StoreKey( packageType, StoreType.valueOf( type ), name ) );
     }
 
     public Uni<Response> doGet( String path, HttpServerRequest request ) throws Exception
     {
+        return doGet( path, request, null, null );
+    }
+
+    public Uni<Response> doGet( String path, HttpServerRequest request, String trackingId, StoreKey storeKey )
+                    throws Exception
+    {
         TrackedContentEntry entry = null;
-        if ( getBuildConfigId() != null )
+        if ( trackingId != null )
         {
-            entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
-                                             AccessChannel.NATIVE, "",
+            entry = new TrackedContentEntry( new TrackingKey( trackingId ), storeKey, AccessChannel.NATIVE, "",
                                              "/" + path.replaceFirst( "^\\/?(\\w+\\/){5}", "" ), StoreEffect.DOWNLOAD,
                                              0L, "", "", "" );
         }
@@ -109,16 +113,22 @@ public class ProxyService
                                 InputStream is, HttpServerRequest request ) throws Exception
     {
         String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
-        return doPut( contentPath, is, request );
+        return doPut( contentPath, is, trackingId, new StoreKey( packageType, StoreType.valueOf( type ), name ),
+                      request );
     }
 
     public Uni<Response> doPut( String path, InputStream is, HttpServerRequest request ) throws Exception
     {
+        return doPut( path, is, null, null, request );
+    }
+
+    public Uni<Response> doPut( String path, InputStream is, String trackingId, StoreKey storeKey,
+                                HttpServerRequest request ) throws Exception
+    {
         TrackedContentEntry entry = null;
-        if ( getBuildConfigId() != null )
+        if ( trackingId != null )
         {
-            entry = new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), generateStoreKey( path ),
-                                             AccessChannel.NATIVE,
+            entry = new TrackedContentEntry( new TrackingKey( trackingId ), storeKey, AccessChannel.NATIVE,
                                              "http://" + proxyConfiguration.getServices().iterator().next().host + "/"
                                                              + path, path, StoreEffect.UPLOAD, 0L, "", "", "" );
         }
@@ -188,11 +198,4 @@ public class ProxyService
         String key = header.getFirst();
         return !FORBIDDEN_HEADERS.contains( key.toLowerCase() );
     }
-
-    private StoreKey generateStoreKey( String path )
-    {
-        String[] elements = path.split( "/" );
-        return new StoreKey( elements[2], StoreType.valueOf( elements[3] ), elements[4] );
-    }
-
 }

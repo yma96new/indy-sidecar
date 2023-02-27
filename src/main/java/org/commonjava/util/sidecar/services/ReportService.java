@@ -122,14 +122,15 @@ public class ReportService
     }
 
     @ConsumeEvent( value = FOLO_BUILD )
-    private void logFoloDownload( String path )
+    private void logFoloDownload( String message )
     {
-        HistoricalEntryDTO entryDTO = historicalContentMap.get( path );
-        this.trackedContent.appendDownload(
-                        new TrackedContentEntry( new TrackingKey( getBuildConfigId() ), entryDTO.getStoreKey(),
-                                                 AccessChannel.NATIVE, entryDTO.getOriginUrl(), entryDTO.getPath(),
-                                                 StoreEffect.DOWNLOAD, entryDTO.getSize(), entryDTO.getMd5(),
-                                                 entryDTO.getSha1(), entryDTO.getSha256() ) );
+        String[] msg = message.split( ":" );
+        HistoricalEntryDTO entryDTO = historicalContentMap.get( msg[0] );
+        this.trackedContent.appendDownload( new TrackedContentEntry( new TrackingKey( msg[1] ), entryDTO.getStoreKey(),
+                                                                     AccessChannel.NATIVE, entryDTO.getOriginUrl(),
+                                                                     entryDTO.getPath(), StoreEffect.DOWNLOAD,
+                                                                     entryDTO.getSize(), entryDTO.getMd5(),
+                                                                     entryDTO.getSha1(), entryDTO.getSha256() ) );
     }
 
     public Uni<Response> importReport( final HttpServerRequest request ) throws Exception

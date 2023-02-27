@@ -88,7 +88,7 @@ public class FoloContentAccessResource
             InputStream inputStream = FileUtils.openInputStream( download.get() );
             final Response.ResponseBuilder builder = Response.ok( new TransferStreamingOutput( inputStream ) );
             logger.debug( "Download path: {} from historical archive.", path );
-            bus.publish( FOLO_BUILD, path );
+            bus.publish( FOLO_BUILD, path + ":" + id );
             return Uni.createFrom().item( builder.build() );
         }
         else
