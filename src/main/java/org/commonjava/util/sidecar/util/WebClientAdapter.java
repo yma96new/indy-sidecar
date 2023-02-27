@@ -21,6 +21,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.vertx.UniHelper;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -49,7 +50,9 @@ import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.HttpHeaders.HOST;
+import static org.commonjava.util.sidecar.util.SidecarUtils.getMediaType;
 
 public class WebClientAdapter
 {
@@ -101,7 +104,8 @@ public class WebClientAdapter
         {
             File bodyFile = cacheInputStream( is );
 
-            return new RequestAdapter( new Request.Builder().post( RequestBody.create( bodyFile, getMediaType( req ) ) )
+            return new RequestAdapter( new Request.Builder().post(
+                                                                            RequestBody.create( bodyFile, getMediaType( req.getHeader( CONTENT_TYPE ) ) ) )
                                                             .url( calculateUrl( path ) ), path ).withCleanup(
                             new DeleteInterceptor( bodyFile ) ).headersFrom( req );
         }
@@ -113,28 +117,23 @@ public class WebClientAdapter
 
     public RequestAdapter put( String path, InputStream is, HttpServerRequest req )
     {
+        return put( path, is, req.headers(), getMediaType( req.getHeader( CONTENT_TYPE ) ), req.absoluteURI() );
+    }
+
+    public RequestAdapter put( String path, InputStream is, MultiMap multiMap, MediaType mediaType, String uri )
+    {
         try
         {
             File bodyFile = cacheInputStream( is );
 
-            return new RequestAdapter( new Request.Builder().put( RequestBody.create( bodyFile, getMediaType( req ) ) )
+            return new RequestAdapter( new Request.Builder().put( RequestBody.create( bodyFile, mediaType ) )
                                                             .url( calculateUrl( path ) ), path ).withCleanup(
-                            new DeleteInterceptor( bodyFile ) ).headersFrom( req );
+                            new DeleteInterceptor( bodyFile ) ).headersFrom( multiMap, uri );
         }
         catch ( IOException exception )
         {
             return new RequestAdapter( exception );
         }
-    }
-
-    private MediaType getMediaType( HttpServerRequest req )
-    {
-        String contentType = req.getHeader( "Content-Type" );
-        if ( contentType != null )
-        {
-            return MediaType.get( contentType );
-        }
-        return null;
     }
 
     private File cacheInputStream( InputStream is ) throws IOException
@@ -211,12 +210,16 @@ public class WebClientAdapter
 
         public RequestAdapter headersFrom( HttpServerRequest request )
         {
+            return headersFrom( request.headers(), request.absoluteURI() );
+        }
+
+        public RequestAdapter headersFrom( MultiMap headers, String uri )
+        {
             if ( exception != null )
             {
                 return this;
             }
 
-            io.vertx.core.MultiMap headers = request.headers();
             headers.forEach( h -> {
                 if ( !HOST.equalsIgnoreCase( h.getKey() ) )
                 {
@@ -228,8 +231,6 @@ public class WebClientAdapter
             requestBuilder.header( HEADER_PROXY_TRACE_ID, traceId );
             if ( headers.get( PROXY_ORIGIN ) == null )
             {
-                String uri = request.absoluteURI();
-
                 try
                 {
                     URL url = new URL( uri );
@@ -415,7 +416,7 @@ public class WebClientAdapter
             Response resp;
             int tryCounter = 0;
             long start = System.currentTimeMillis();
-            long backOff = 0l;
+            long backOff = 0L;
             do
             {
                 try

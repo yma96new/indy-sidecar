@@ -29,7 +29,20 @@ public class PreSeedConstants
 
     public static final String FOLO_TRACK_REST_BASE_PATH = "api/folo/track";
 
+    public static final String FOLO_ADMIN_REST_BASE_PATH = "/api/folo/admin";
+
+    public static final String FOLO_ADMIN_REPORT_IMPORT_REST_PATH = FOLO_ADMIN_REST_BASE_PATH + "/report/import";
+
+    public static final String FOLO_ADMIN_REPORT_ARTIFACT_RECORD_REST_PATH =
+                    FOLO_ADMIN_REST_BASE_PATH + "/report/recordArtifact";
+
     public static final String DEFAULT_REPO_PATH = System.getProperty( "user.home" ) + "/preSeedRepo";
 
     public static final String FOLO_BUILD = "folo-build";
+
+    public static final String ABSOLUTE_URI = "AbsoluteURI";
+
+    public static final String TRACKING_PATH = "Tracking-Path";
+
+    public static final String TRACKING_ID = "Tracking-Id";
 }
