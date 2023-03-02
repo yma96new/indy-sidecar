@@ -19,7 +19,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
+import okhttp3.MediaType;
 import org.commonjava.util.sidecar.config.SidecarConfig;
 import org.commonjava.util.sidecar.model.AccessChannel;
 import org.commonjava.util.sidecar.model.StoreEffect;
@@ -43,15 +47,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.ABSOLUTE_URI;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.DEFAULT_REPO_PATH;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_ADMIN_REPORT_ARTIFACT_RECORD_REST_PATH;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_ADMIN_REPORT_IMPORT_REST_PATH;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.TRACKING_ID;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.TRACKING_PATH;
 import static org.commonjava.util.sidecar.util.SidecarUtils.getBuildConfigId;
+import static org.commonjava.util.sidecar.util.SidecarUtils.getMediaType;
 import static org.commonjava.util.sidecar.util.SidecarUtils.normalizePathAnd;
 
 @Startup
 @ApplicationScoped
 public class ReportService
 {
+
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     private final HashMap<String, HistoricalEntryDTO> historicalContentMap = new HashMap<>();
@@ -122,29 +134,49 @@ public class ReportService
     }
 
     @ConsumeEvent( value = FOLO_BUILD )
-    private void logFoloDownload( String message )
+    public void storeTrackedDownload( JsonObject headers ) throws Exception
     {
-        String[] msg = message.split( ":" );
-        HistoricalEntryDTO entryDTO = historicalContentMap.get( msg[0] );
-        this.trackedContent.appendDownload( new TrackedContentEntry( new TrackingKey( msg[1] ), entryDTO.getStoreKey(),
-                                                                     AccessChannel.NATIVE, entryDTO.getOriginUrl(),
-                                                                     entryDTO.getPath(), StoreEffect.DOWNLOAD,
-                                                                     entryDTO.getSize(), entryDTO.getMd5(),
-                                                                     entryDTO.getSha1(), entryDTO.getSha256() ) );
+        HistoricalEntryDTO entryDTO = historicalContentMap.get( headers.getString( TRACKING_PATH ) );
+        String originalUrl = entryDTO.getOriginUrl() == null ? "" : entryDTO.getOriginUrl();
+        TrackedContentEntry contentEntry = new TrackedContentEntry( new TrackingKey( headers.getString( TRACKING_ID ) ),
+                                                                    entryDTO.getStoreKey(), AccessChannel.NATIVE,
+                                                                    originalUrl, entryDTO.getPath(),
+                                                                    StoreEffect.DOWNLOAD, entryDTO.getSize(),
+                                                                    entryDTO.getMd5(), entryDTO.getSha1(),
+                                                                    entryDTO.getSha256() );
+        this.trackedContent.appendDownload( contentEntry );
+
+        MultiMap map = MultiMap.caseInsensitiveMultiMap();
+        for ( String key : headers.getMap().keySet() )
+        {
+            map.add( key, headers.getString( key ) );
+        }
+        MediaType contentType = getMediaType( headers.getString( CONTENT_TYPE ) );
+        String uri = headers.getString( ABSOLUTE_URI );
+
+        InputStream is = new ByteArrayInputStream( objectMapper.writeValueAsBytes( contentEntry ) );
+        normalizePathAnd( FOLO_ADMIN_REPORT_ARTIFACT_RECORD_REST_PATH, p -> classifier.classifyAnd( p, HttpMethod.PUT,
+                                                                                                    ( client, service ) -> proxyService.wrapAsyncCall(
+                                                                                                                    client.put( FOLO_ADMIN_REPORT_ARTIFACT_RECORD_REST_PATH,
+                                                                                                                                is,
+                                                                                                                                map,
+                                                                                                                                contentType,
+                                                                                                                                uri )
+                                                                                                                          .call(),
+                                                                                                                    HttpMethod.PUT ) ) );
+
     }
 
     public Uni<Response> importReport( final HttpServerRequest request ) throws Exception
     {
-        //Change here when we decide indy import API
-        String path = "api/folo/admin/report/import";
-
-        ObjectMapper mapper = new ObjectMapper();
-        InputStream is = new ByteArrayInputStream( mapper.writeValueAsBytes( trackedContent ) );
-        return normalizePathAnd( path, p -> classifier.classifyAnd( p, request,
-                                                                    ( client, service ) -> proxyService.wrapAsyncCall(
-                                                                                    client.put( path, is, request )
-                                                                                          .call(),
-                                                                                    request.method() ) ) );
+        InputStream is = new ByteArrayInputStream( objectMapper.writeValueAsBytes( trackedContent ) );
+        return normalizePathAnd( FOLO_ADMIN_REPORT_IMPORT_REST_PATH, p -> classifier.classifyAnd( p, request,
+                                                                                                  ( client, service ) -> proxyService.wrapAsyncCall(
+                                                                                                                  client.put( FOLO_ADMIN_REPORT_IMPORT_REST_PATH,
+                                                                                                                              is,
+                                                                                                                              request )
+                                                                                                                        .call(),
+                                                                                                                  request.method() ) ) );
     }
 
     public void clearReport()

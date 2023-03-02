@@ -15,6 +15,8 @@
  */
 package org.commonjava.util.sidecar.util;
 
+import okhttp3.MediaType;
+
 import java.time.Duration;
 
 import static io.vertx.core.http.impl.HttpUtils.normalizePath;
@@ -36,6 +38,15 @@ public class SidecarUtils
     public static <R> R normalizePathAnd( String path, CheckedFunction<String, R> action ) throws Exception
     {
         return action.apply( normalizePath( path ) );
+    }
+
+    public static MediaType getMediaType( String contentType )
+    {
+        if ( contentType != null )
+        {
+            return MediaType.get( contentType );
+        }
+        return null;
     }
 
     @FunctionalInterface

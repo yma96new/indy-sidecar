@@ -16,7 +16,9 @@
 package org.commonjava.util.sidecar.jaxrs;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.apache.commons.io.FileUtils;
 import org.commonjava.util.sidecar.services.ArchiveRetrieveService;
@@ -41,15 +43,20 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.ABSOLUTE_URI;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.TRACKING_ID;
+import static org.commonjava.util.sidecar.services.PreSeedConstants.TRACKING_PATH;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.PATH;
 
 @Path( "/api/folo/track/{id}/{packageType: (maven|npm)}/{type: (hosted|group|remote)}/{name}" )
 public class FoloContentAccessResource
 {
+
     private final Logger logger = LoggerFactory.getLogger( getClass() );
 
     @Inject
@@ -88,7 +95,7 @@ public class FoloContentAccessResource
             InputStream inputStream = FileUtils.openInputStream( download.get() );
             final Response.ResponseBuilder builder = Response.ok( new TransferStreamingOutput( inputStream ) );
             logger.debug( "Download path: {} from historical archive.", path );
-            bus.publish( FOLO_BUILD, path + ":" + id );
+            publishTrackingEvent( request, path, id );
             return Uni.createFrom().item( builder.build() );
         }
         else
@@ -131,5 +138,19 @@ public class FoloContentAccessResource
     {
         logger.debug( "Put proxy resource for folo request: {}", path );
         return proxyService.doPut( id, packageType, type, name, path, is, request );
+    }
+
+    private void publishTrackingEvent( final HttpServerRequest request, final String path, final String id )
+    {
+        MultiMap headers = request.headers();
+        headers.add( ABSOLUTE_URI, request.absoluteURI() );
+        headers.add( TRACKING_PATH, path.startsWith( "/" ) ? path : "/" + path );
+        headers.add( TRACKING_ID, id );
+        JsonObject trackingHeaders = new JsonObject();
+        for ( Map.Entry<String, String> entry : headers.entries() )
+        {
+            trackingHeaders.put( entry.getKey(), entry.getValue() );
+        }
+        bus.publish( FOLO_BUILD, trackingHeaders );
     }
 }
