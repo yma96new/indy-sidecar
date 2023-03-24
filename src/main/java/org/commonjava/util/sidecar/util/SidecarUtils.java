@@ -23,7 +23,7 @@ import static io.vertx.core.http.impl.HttpUtils.normalizePath;
 
 public class SidecarUtils
 {
-    public final static String BUILD_CONFIG_ID = "build.config.id";
+    public final static String BUILD_CONFIG_ID = "BUILD_CONFIG_ID";
 
     public static String getBuildConfigId()
     {
