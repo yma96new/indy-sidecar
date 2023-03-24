@@ -52,7 +52,7 @@ public class ArchiveRetrieveService
 
     private final static int SOCKET_TIMEOUT = 30 * 60 * 1000; // 30m
 
-    private final static String BUILD_CONFIG_ID = "build.config.id";
+    private final static String BUILD_CONFIG_ID = "BUILD_CONFIG_ID";
 
     private final static String MAVEN_META = "maven-metadata.xml";
 
