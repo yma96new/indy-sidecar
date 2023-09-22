@@ -41,7 +41,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 
-    <httpTestserverVersion>1.5-SNAPSHOT</httpTestserverVersion>
+    <httpTestserverVersion>1.5</httpTestserverVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
