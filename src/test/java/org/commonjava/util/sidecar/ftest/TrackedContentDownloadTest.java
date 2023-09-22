@@ -18,7 +18,10 @@ package org.commonjava.util.sidecar.ftest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
+import org.commonjava.test.http.expect.ExpectationServer;
 import org.commonjava.util.sidecar.ftest.profile.SidecarFunctionProfile;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +37,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 @TestProfile( SidecarFunctionProfile.class )
 @Tag( "function" )
 public class TrackedContentDownloadTest
-                extends AbstractSidecarFuncTest
+        extends AbstractSidecarFuncTest
 {
     /**
      * <b>GIVEN:</b>
@@ -56,7 +59,10 @@ public class TrackedContentDownloadTest
      */
     @Test
     public void testTrackedFileDownloadContent()
+            throws Exception
     {
+        final String path = "/api/folo/track/2021/maven/hosted/shared-imports/9000";
+        server.expect( path, OK.getStatusCode(), "" );
         RestAssured.registerParser( "application/octet-stream", JSON );
         given().when()
                .get( "/api/folo/track/2021/maven/hosted/shared-imports/9000" )

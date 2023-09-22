@@ -29,7 +29,7 @@ import static javax.ws.rs.core.Response.Status.OK;
 @TestProfile( SidecarFunctionProfile.class )
 @Tag( "function" )
 public class MavenDownloadContentTest
-                extends AbstractSidecarFuncTest
+        extends AbstractSidecarFuncTest
 {
     /**
      * <b>GIVEN:</b>
@@ -51,11 +51,12 @@ public class MavenDownloadContentTest
      */
     @Test
     public void testArtifactDownloadContent()
+            throws Exception
     {
-        given().when()
-               .get( "/api/folo/track/2021/maven/hosted/shared-imports/org/apache/maven/maven-core/3.0/maven-core-3.0.jar" )
-               .then()
-               .statusCode( OK.getStatusCode() );
+        final String path =
+                "/api/folo/track/2021/maven/hosted/shared-imports/org/apache/maven/maven-core/3.0/maven-core-3.0.jar";
+        server.expect( path, OK.getStatusCode(), "" );
+        given().when().get( path ).then().statusCode( OK.getStatusCode() );
     }
 
     /**

@@ -20,6 +20,10 @@ quarkus:
     propagators:
       - envar
     tracer:
+      "resource-attributes":
+        - "service.name=indy-sidecar"
+#        - "sample.rate=0.05"
+#        - "deployment.environment=localhost"
       exporter:
         otlp:
         # This is for sending to something like opentelemetry-collector

@@ -103,10 +103,7 @@ public class Classifier
     {
         if ( otel.enabled() )
         {
-            Span span = Span.current();
-            span.setAttribute( "service_name", "sidecar" );
-            span.setAttribute( "name", method.name() );
-            span.setAttribute( "path.ext", FilenameUtils.getExtension( path ) );
+            Span.current().setAttribute( "path.ext", FilenameUtils.getExtension( path ) );
         }
 
         ServiceConfig service = getServiceConfig( path, method );
@@ -124,16 +121,7 @@ public class Classifier
         if ( otel.enabled() )
         {
             Span span = Span.current();
-            Span.current().setAttribute( "serviced", 1 );
-            span.setAttribute( "target.host", service.host );
-            span.setAttribute( "target.port", service.port );
-            span.setAttribute( "target.method", method.name() );
-            span.setAttribute( "target.path", path );
-        }
-        if ( otel.enabled() )
-        {
-            Span span = Span.current();
-            Span.current().setAttribute( "serviced", 1 );
+            span.setAttribute( "serviced", 1 );
             span.setAttribute( "target.host", service.host );
             span.setAttribute( "target.port", service.port );
             span.setAttribute( "target.method", method.name() );
@@ -161,7 +149,7 @@ public class Classifier
         return service;
     }
 
-    private WebClientAdapter getWebClient( ServiceConfig service ) throws Exception
+    private WebClientAdapter getWebClient( ServiceConfig service )
     {
         return clientMap.computeIfAbsent( service,
                                           sc -> new WebClientAdapter( sc, proxyConfiguration, timeout, otel ) );
