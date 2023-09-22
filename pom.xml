@@ -40,6 +40,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+
+    <httpTestserverVersion>1.5-SNAPSHOT</httpTestserverVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -132,6 +134,12 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-epoll</artifactId>
       <classifier>linux-x86_64</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.commonjava.util</groupId>
+      <artifactId>http-testserver</artifactId>
+      <version>${httpTestserverVersion}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>

@@ -5,7 +5,7 @@ proxy:
     interval: 3000
     maxBackOff: 15000
   services:
-    - host: indy-master-devel.psi.redhat.com
+    - host: localhost
       ssl: false
-      port: 80
+      port: 10028
       path-pattern: /api/.+
