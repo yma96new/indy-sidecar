@@ -17,6 +17,8 @@ package org.commonjava.util.sidecar.ftest;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
+import org.commonjava.test.http.expect.ExpectationServer;
+import org.commonjava.test.http.quarkus.InjectExpected;
 import org.commonjava.util.sidecar.ftest.profile.SidecarFunctionProfile;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,8 @@ import static javax.ws.rs.core.Response.Status.OK;
 public class MavenDownloadContentTest
         extends AbstractSidecarFuncTest
 {
+    @InjectExpected(port = 10028)
+    ExpectationServer server;
     /**
      * <b>GIVEN:</b>
      * <ul>
