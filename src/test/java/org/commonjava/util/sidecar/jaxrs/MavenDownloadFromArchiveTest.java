@@ -18,9 +18,8 @@ package org.commonjava.util.sidecar.jaxrs;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import org.commonjava.test.http.expect.ExpectationServer;
+import org.commonjava.test.http.quarkus.InjectExpected;
 import org.commonjava.util.sidecar.jaxrs.mock.MockTestProfile;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
@@ -30,8 +29,9 @@ import static javax.ws.rs.core.Response.Status.OK;
 @QuarkusTest
 @TestProfile( MockTestProfile.class )
 public class MavenDownloadFromArchiveTest
-        extends AbstractJaxRsTest
 {
+    @InjectExpected( port = 10028 )
+    ExpectationServer server;
 
     @Test
     public void testMetadataDownload()

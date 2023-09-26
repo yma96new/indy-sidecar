@@ -16,10 +16,7 @@
 package org.commonjava.util.sidecar.ftest;
 
 import org.apache.commons.io.FileUtils;
-import org.commonjava.test.http.expect.ExpectationServer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.File;
@@ -43,23 +40,7 @@ public class AbstractSidecarFuncTest
 
     private final String SUCCESS_BUILD = "9000";
 
-    private final String REPO = "/maven/hosted/shared-imports";
-
     private final String PATH = "/org/apache/maven/maven-core/3.0/maven-core-3.0.jar";
-
-    protected final static ExpectationServer server = new ExpectationServer( 10028 );
-
-    @BeforeAll
-    public static void before()
-    {
-        server.start();
-    }
-
-    @AfterAll
-    public static void after()
-    {
-        server.stop();
-    }
 
     @BeforeEach
     public void prepare()

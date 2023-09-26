@@ -19,6 +19,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
 import org.commonjava.test.http.expect.ExpectationServer;
+import org.commonjava.test.http.quarkus.InjectExpected;
 import org.commonjava.util.sidecar.ftest.profile.SidecarFunctionProfile;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,6 +40,8 @@ import static org.hamcrest.CoreMatchers.containsString;
 public class TrackedContentDownloadTest
         extends AbstractSidecarFuncTest
 {
+    @InjectExpected(port = 10028)
+    ExpectationServer server;
     /**
      * <b>GIVEN:</b>
      * <ul>

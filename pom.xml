@@ -41,7 +41,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 
-    <httpTestserverVersion>1.5</httpTestserverVersion>
+    <httpTestserverVersion>2.2</httpTestserverVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -137,7 +137,7 @@
     </dependency>
     <dependency>
       <groupId>org.commonjava.util</groupId>
-      <artifactId>http-testserver</artifactId>
+      <artifactId>http-testserver-quarkus</artifactId>
       <version>${httpTestserverVersion}</version>
       <scope>test</scope>
     </dependency>
