@@ -100,6 +100,7 @@ public class FoloContentAccessResource
         }
         else
         {
+            logger.debug( "Download path: {} from proxy.", path );
             return proxyService.doGet( id, packageType, type, name, path, request );
         }
     }
