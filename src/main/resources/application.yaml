@@ -1,4 +1,7 @@
 quarkus:
+  shutdown:
+    #  This Duration should be set large enough for all sidecar requests(sync and async) completion
+    timeout: 10h
   package:
     type: uber-jar
   http:

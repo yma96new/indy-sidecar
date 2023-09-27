@@ -136,14 +136,21 @@ public class ReportService
     @ConsumeEvent( value = FOLO_BUILD )
     public void storeTrackedDownload( JsonObject headers ) throws Exception
     {
-        HistoricalEntryDTO entryDTO = historicalContentMap.get( headers.getString( TRACKING_PATH ) );
+        String path = headers.getString( TRACKING_PATH );
+        logger.debug( "Consuming folo record seal event for path {}", path );
+
+        HistoricalEntryDTO entryDTO = historicalContentMap.get( path );
+        if ( entryDTO == null )
+        {
+            logger.warn( "No entry meta is found for tracking {}.", path );
+            return;
+        }
         String originalUrl = entryDTO.getOriginUrl() == null ? "" : entryDTO.getOriginUrl();
-        TrackedContentEntry contentEntry = new TrackedContentEntry( new TrackingKey( headers.getString( TRACKING_ID ) ),
-                                                                    entryDTO.getStoreKey(), AccessChannel.NATIVE,
-                                                                    originalUrl, entryDTO.getPath(),
-                                                                    StoreEffect.DOWNLOAD, entryDTO.getSize(),
-                                                                    entryDTO.getMd5(), entryDTO.getSha1(),
-                                                                    entryDTO.getSha256() );
+        TrackedContentEntry contentEntry =
+                new TrackedContentEntry( new TrackingKey( headers.getString( TRACKING_ID ) ), entryDTO.getStoreKey(),
+                                         AccessChannel.NATIVE, originalUrl, entryDTO.getPath(), StoreEffect.DOWNLOAD,
+                                         entryDTO.getSize(), entryDTO.getMd5(), entryDTO.getSha1(),
+                                         entryDTO.getSha256() );
         this.trackedContent.appendDownload( contentEntry );
 
         MultiMap map = MultiMap.caseInsensitiveMultiMap();
@@ -153,17 +160,19 @@ public class ReportService
         }
         MediaType contentType = getMediaType( headers.getString( CONTENT_TYPE ) );
         String uri = headers.getString( ABSOLUTE_URI );
-
         InputStream is = new ByteArrayInputStream( objectMapper.writeValueAsBytes( contentEntry ) );
+
+        logger.debug( "Seal folo record for path: {}, contentEntry: {}", path, contentEntry );
         normalizePathAnd( FOLO_ADMIN_REPORT_ARTIFACT_RECORD_REST_PATH, p -> classifier.classifyAnd( p, HttpMethod.PUT,
                                                                                                     ( client, service ) -> proxyService.wrapAsyncCall(
-                                                                                                                    client.put( FOLO_ADMIN_REPORT_ARTIFACT_RECORD_REST_PATH,
-                                                                                                                                is,
-                                                                                                                                map,
-                                                                                                                                contentType,
-                                                                                                                                uri )
-                                                                                                                          .call(),
-                                                                                                                    HttpMethod.PUT ) ) );
+                                                                                                            client.put(
+                                                                                                                          FOLO_ADMIN_REPORT_ARTIFACT_RECORD_REST_PATH,
+                                                                                                                          is,
+                                                                                                                          map,
+                                                                                                                          contentType,
+                                                                                                                          uri )
+                                                                                                                  .call(),
+                                                                                                            HttpMethod.PUT ) ) );
 
     }
 
@@ -172,11 +181,12 @@ public class ReportService
         InputStream is = new ByteArrayInputStream( objectMapper.writeValueAsBytes( trackedContent ) );
         return normalizePathAnd( FOLO_ADMIN_REPORT_IMPORT_REST_PATH, p -> classifier.classifyAnd( p, request,
                                                                                                   ( client, service ) -> proxyService.wrapAsyncCall(
-                                                                                                                  client.put( FOLO_ADMIN_REPORT_IMPORT_REST_PATH,
-                                                                                                                              is,
-                                                                                                                              request )
-                                                                                                                        .call(),
-                                                                                                                  request.method() ) ) );
+                                                                                                          client.put(
+                                                                                                                        FOLO_ADMIN_REPORT_IMPORT_REST_PATH,
+                                                                                                                        is,
+                                                                                                                        request )
+                                                                                                                .call(),
+                                                                                                          request.method() ) ) );
     }
 
     public void clearReport()
