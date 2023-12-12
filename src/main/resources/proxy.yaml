@@ -6,6 +6,6 @@ proxy:
     maxBackOff: 15000
   services:
     - host: indy-gateway-master-indy-preview.apps.ocp-c1.prod.psi.redhat.com
-      ssl: true
-      port: 443
+      ssl: false
+      port: 80
       path-pattern: /api/.+

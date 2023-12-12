@@ -37,7 +37,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -46,7 +45,6 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.ABSOLUTE_URI;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.TRACKING_ID;
@@ -72,7 +70,6 @@ public class FoloContentAccessResource
     @APIResponse( responseCode = "200", description = "Content stream" )
     @APIResponse( responseCode = "404", description = "Content is not available" )
     @Path( "{path: (.*)}" )
-    @Produces( APPLICATION_OCTET_STREAM )
     @GET
     public Uni<Response> get( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
