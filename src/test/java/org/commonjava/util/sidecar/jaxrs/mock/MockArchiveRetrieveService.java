@@ -33,11 +33,9 @@ import static org.commonjava.util.sidecar.util.TestUtil.getBytes;
 public class MockArchiveRetrieveService
                 extends ArchiveRetrieveService
 {
-    @Override
     @PostConstruct
     public void init()
     {
-        super.init();
         try
         {
             File tracked = new File( DEFAULT_REPO_PATH, "1000" );

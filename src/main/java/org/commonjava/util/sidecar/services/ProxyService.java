@@ -100,17 +100,27 @@ public class ProxyService
         }
         TrackedContentEntry finalEntry = entry;
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                        client.get( p, request ).call(), request.method(), finalEntry ) ) );
+                client.get( p, request ).call(), request.method(), finalEntry ) ) );
     }
 
-    public Uni<Response> doPost( String path, InputStream is, HttpServerRequest request ) throws Exception
+    public Uni<Response> doPost( String trackingId, String packageType, String type, String name, String path,
+                                 InputStream is, HttpServerRequest request )
+            throws Exception
+    {
+        String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
+        return doPost( contentPath, is, request );
+    }
+
+    public Uni<Response> doPost( String path, InputStream is, HttpServerRequest request )
+            throws Exception
     {
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                        client.post( p, is, request ).call(), request.method() ) ) );
+                client.post( p, is, request ).call(), request.method() ) ) );
     }
 
     public Uni<Response> doPut( String trackingId, String packageType, String type, String name, String path,
-                                InputStream is, HttpServerRequest request ) throws Exception
+                                InputStream is, HttpServerRequest request )
+            throws Exception
     {
         String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
         return doPut( contentPath, is, trackingId, new StoreKey( packageType, StoreType.valueOf( type ), name ),

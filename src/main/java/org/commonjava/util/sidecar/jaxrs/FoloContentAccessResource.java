@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -136,6 +137,21 @@ public class FoloContentAccessResource
     {
         logger.debug( "Put proxy resource for folo request: {}", path );
         return proxyService.doPut( id, packageType, type, name, path, is, request );
+    }
+
+    @POST
+    @Path( "{path: (.*)}" )
+    public Uni<Response> post( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
+                              @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
+                                      "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
+                              @Parameter( in = PATH, schema = @Schema( enumeration = { "hosted", "group",
+                                      "remote" } ), required = true ) @PathParam( "type" ) final String type,
+                              @Parameter( in = PATH, required = true ) @PathParam( "name" ) final String name,
+                              @PathParam( "path" ) String path, InputStream is,
+                              final @Context HttpServerRequest request ) throws Exception
+    {
+        logger.debug( "POST proxy resource for folo request: {}", path );
+        return proxyService.doPost( id, packageType, type, name, path, is, request );
     }
 
     private void publishTrackingEvent( final HttpServerRequest request, final String path, final String id )
