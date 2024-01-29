@@ -67,7 +67,7 @@ public class FoloContentAccessResource
     @Operation( description = "Retrieve Maven/NPM artifact content from historical archive or proxy" )
     @APIResponse( responseCode = "200", description = "Content stream" )
     @APIResponse( responseCode = "404", description = "Content is not available" )
-    @Path( "{path: (.*)}" )
+    @Path( "/{path: (.*)}" )
     @GET
     public Uni<Response> get( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
@@ -104,7 +104,7 @@ public class FoloContentAccessResource
     @APIResponse( responseCode = "404", description = "Content is not available" )
     @APIResponse( responseCode = "200", description = "Header metadata for content (or rendered listing when path ends with '/index.html' or '/'" )
     @HEAD
-    @Path( "{path: (.*)}" )
+    @Path( "/{path: (.*)}" )
     public Uni<Response> head( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                                @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
                                                "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
@@ -122,7 +122,7 @@ public class FoloContentAccessResource
     @APIResponse( responseCode = "201", description = "Content was stored successfully" )
     @APIResponse( responseCode = "400", description = "No appropriate storage location was found in the specified store" )
     @PUT
-    @Path( "{path: (.*)}" )
+    @Path( "/{path: (.*)}" )
     public Uni<Response> put( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
                                               "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
@@ -137,7 +137,7 @@ public class FoloContentAccessResource
     }
 
     @POST
-    @Path( "{path: (.*)}" )
+    @Path( "/{path: (.*)}" )
     public Uni<Response> post( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
                                       "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
@@ -151,10 +151,9 @@ public class FoloContentAccessResource
         return proxyService.doPost( id, packageType, type, name, path, is, request );
     }
 
-    private void publishTrackingEvent( String path, String trackingId )
+    private void publishTrackingEvent( String trackingPath, String trackingId )
     {
         JsonObject message = new JsonObject();
-        String trackingPath = path.startsWith( "/" ) ? path : "/" + path;
         message.put( TRACKING_PATH, trackingPath );
         message.put( TRACKING_ID, trackingId );
         bus.publish( FOLO_BUILD, message );

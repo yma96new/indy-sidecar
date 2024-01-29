@@ -21,10 +21,7 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.core.json.JsonObject;
 import org.commonjava.util.sidecar.client.folo.TrackingService;
 import org.commonjava.util.sidecar.config.SidecarConfig;
-import org.commonjava.util.sidecar.model.AccessChannel;
-import org.commonjava.util.sidecar.model.StoreEffect;
-import org.commonjava.util.sidecar.model.TrackedContentEntry;
-import org.commonjava.util.sidecar.model.TrackingKey;
+import org.commonjava.util.sidecar.model.StoreKey;
 import org.commonjava.util.sidecar.model.dto.HistoricalContentDTO;
 import org.commonjava.util.sidecar.model.dto.HistoricalEntryDTO;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -34,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -89,7 +87,9 @@ public class ReportService
                 }
                 for ( HistoricalEntryDTO download : content.getDownloads() )
                 {
-                    this.historicalContentMap.put( download.getPath(), download );
+                    String trackingPath =
+                            download.getPath().startsWith( "/" ) ? download.getPath().substring( 1 ) : path;
+                    this.historicalContentMap.put( trackingPath, download );
                 }
             }
             catch ( IOException e )
@@ -100,7 +100,7 @@ public class ReportService
     }
 
     @ConsumeEvent( value = FOLO_BUILD )
-    public void storeTrackedDownload( JsonObject message ) throws Exception
+    public void storeTrackedDownload( JsonObject message )
     {
         String trackingPath = message.getString( TRACKING_PATH );
         String trackingId = message.getString( TRACKING_ID );
@@ -113,13 +113,13 @@ public class ReportService
             return;
         }
         String originalUrl = entryDTO.getOriginUrl() == null ? "" : entryDTO.getOriginUrl();
-        TrackedContentEntry contentEntry =
-                new TrackedContentEntry( new TrackingKey( trackingId ), entryDTO.getStoreKey(),
-                                         AccessChannel.NATIVE, originalUrl, entryDTO.getPath(), StoreEffect.DOWNLOAD,
-                                         entryDTO.getSize(), entryDTO.getMd5(), entryDTO.getSha1(),
-                                         entryDTO.getSha256() );
-        trackingService.recordArtificat( contentEntry );
-        logger.debug( "Finished consuming folo record seal event for path:{}, trackingId:{}", trackingPath, trackingId );
+        StoreKey storeKey = entryDTO.getStoreKey();
+        Response response = trackingService.recordArtificat( trackingId, trackingPath, storeKey.getPackageType(),
+                                                             storeKey.getType().name(), storeKey.getName(), originalUrl,
+                                                             entryDTO.getSize(), entryDTO.getMd5(), entryDTO.getSha1(),
+                                                             entryDTO.getSha256() );
+        logger.debug( "Finished consuming folo record seal event for path:{}, trackingId:{}, rep code: {}, body: {}",
+                      trackingPath, trackingId, response.getStatus(), response.getStatusInfo().getReasonPhrase() );
     }
 
 }
