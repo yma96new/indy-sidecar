@@ -95,28 +95,22 @@ public class Classifier
     public <R> R classifyAnd( String path, HttpServerRequest request,
                               BiFunction<WebClientAdapter, ServiceConfig, R> action ) throws Exception
     {
-        return classifyAnd( path, request.method(), action );
-    }
-
-    public <R> R classifyAnd( String path, HttpMethod method, BiFunction<WebClientAdapter, ServiceConfig, R> action )
-                    throws Exception
-    {
         if ( otel.enabled() )
         {
             Span.current().setAttribute( "path.ext", FilenameUtils.getExtension( path ) );
         }
 
-        ServiceConfig service = getServiceConfig( path, method );
+        ServiceConfig service = getServiceConfig( path, request );
         if ( service == null )
         {
             if ( otel.enabled() )
             {
                 Span.current().setAttribute( "serviced", 0 );
                 Span.current().setAttribute( "missing.path", path );
-                Span.current().setAttribute( "missing.method", method.name() );
+                Span.current().setAttribute( "missing.method", request.method().name() );
             }
 
-            throw new ServiceNotFoundException( "Service not found, path: " + path + ", method: " + method );
+            throw new ServiceNotFoundException( "Service not found, path: " + path + ", method: " + request.method() );
         }
         if ( otel.enabled() )
         {
@@ -124,14 +118,16 @@ public class Classifier
             span.setAttribute( "serviced", 1 );
             span.setAttribute( "target.host", service.host );
             span.setAttribute( "target.port", service.port );
-            span.setAttribute( "target.method", method.name() );
+            span.setAttribute( "target.method", request.method().name() );
             span.setAttribute( "target.path", path );
         }
         return action.apply( getWebClient( service ), service );
     }
 
-    private ServiceConfig getServiceConfig( String path, HttpMethod method )
+    private ServiceConfig getServiceConfig( String path, HttpServerRequest request )
     {
+        HttpMethod method = request.method();
+
         ServiceConfig service = null;
 
         Set<ServiceConfig> services = proxyConfiguration.getServices();

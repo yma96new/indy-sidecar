@@ -16,7 +16,6 @@
 package org.commonjava.util.sidecar.jaxrs;
 
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -43,10 +42,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Optional;
 
-import static org.commonjava.util.sidecar.services.PreSeedConstants.ABSOLUTE_URI;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.FOLO_BUILD;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.TRACKING_ID;
 import static org.commonjava.util.sidecar.services.PreSeedConstants.TRACKING_PATH;
@@ -70,7 +67,7 @@ public class FoloContentAccessResource
     @Operation( description = "Retrieve Maven/NPM artifact content from historical archive or proxy" )
     @APIResponse( responseCode = "200", description = "Content stream" )
     @APIResponse( responseCode = "404", description = "Content is not available" )
-    @Path( "{path: (.*)}" )
+    @Path( "/{path: (.*)}" )
     @GET
     public Uni<Response> get( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
@@ -93,7 +90,7 @@ public class FoloContentAccessResource
             InputStream inputStream = FileUtils.openInputStream( download.get() );
             final Response.ResponseBuilder builder = Response.ok( new TransferStreamingOutput( inputStream ) );
             logger.debug( "Download path: {} from historical archive.", path );
-            publishTrackingEvent( request, path, id );
+            publishTrackingEvent( path, id );
             return Uni.createFrom().item( builder.build() );
         }
         else
@@ -107,7 +104,7 @@ public class FoloContentAccessResource
     @APIResponse( responseCode = "404", description = "Content is not available" )
     @APIResponse( responseCode = "200", description = "Header metadata for content (or rendered listing when path ends with '/index.html' or '/'" )
     @HEAD
-    @Path( "{path: (.*)}" )
+    @Path( "/{path: (.*)}" )
     public Uni<Response> head( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                                @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
                                                "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
@@ -125,7 +122,7 @@ public class FoloContentAccessResource
     @APIResponse( responseCode = "201", description = "Content was stored successfully" )
     @APIResponse( responseCode = "400", description = "No appropriate storage location was found in the specified store" )
     @PUT
-    @Path( "{path: (.*)}" )
+    @Path( "/{path: (.*)}" )
     public Uni<Response> put( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
                                               "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
@@ -140,7 +137,7 @@ public class FoloContentAccessResource
     }
 
     @POST
-    @Path( "{path: (.*)}" )
+    @Path( "/{path: (.*)}" )
     public Uni<Response> post( @Parameter( in = PATH, required = true ) @PathParam( "id" ) final String id,
                               @Parameter( in = PATH, schema = @Schema( enumeration = { "maven",
                                       "npm" } ), required = true ) @PathParam( "packageType" ) final String packageType,
@@ -154,17 +151,11 @@ public class FoloContentAccessResource
         return proxyService.doPost( id, packageType, type, name, path, is, request );
     }
 
-    private void publishTrackingEvent( final HttpServerRequest request, final String path, final String id )
+    private void publishTrackingEvent( String trackingPath, String trackingId )
     {
-        MultiMap headers = request.headers();
-        headers.add( ABSOLUTE_URI, request.absoluteURI() );
-        headers.add( TRACKING_PATH, path.startsWith( "/" ) ? path : "/" + path );
-        headers.add( TRACKING_ID, id );
-        JsonObject trackingHeaders = new JsonObject();
-        for ( Map.Entry<String, String> entry : headers.entries() )
-        {
-            trackingHeaders.put( entry.getKey(), entry.getValue() );
-        }
-        bus.publish( FOLO_BUILD, trackingHeaders );
+        JsonObject message = new JsonObject();
+        message.put( TRACKING_PATH, trackingPath );
+        message.put( TRACKING_ID, trackingId );
+        bus.publish( FOLO_BUILD, message );
     }
 }

@@ -21,12 +21,6 @@ import io.vertx.core.http.HttpServerRequest;
 import kotlin.Pair;
 import org.commonjava.util.sidecar.config.ProxyConfiguration;
 import org.commonjava.util.sidecar.interceptor.ExceptionHandler;
-import org.commonjava.util.sidecar.model.AccessChannel;
-import org.commonjava.util.sidecar.model.StoreEffect;
-import org.commonjava.util.sidecar.model.StoreKey;
-import org.commonjava.util.sidecar.model.StoreType;
-import org.commonjava.util.sidecar.model.TrackedContentEntry;
-import org.commonjava.util.sidecar.model.TrackingKey;
 import org.commonjava.util.sidecar.util.OtelAdapter;
 import org.commonjava.util.sidecar.util.ProxyStreamingOutput;
 import org.commonjava.util.sidecar.util.UrlUtils;
@@ -60,9 +54,6 @@ public class ProxyService
     @Inject
     OtelAdapter otel;
 
-    @Inject
-    ReportService reportService;
-
     public Uni<Response> doHead( String trackingId, String packageType, String type, String name, String path,
                                  HttpServerRequest request ) throws Exception
     {
@@ -80,27 +71,14 @@ public class ProxyService
                                 HttpServerRequest request ) throws Exception
     {
         String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
-        return doGet( contentPath, request, trackingId, new StoreKey( packageType, StoreType.valueOf( type ), name ) );
+        return doGet( contentPath, request );
     }
 
-    public Uni<Response> doGet( String path, HttpServerRequest request ) throws Exception
-    {
-        return doGet( path, request, null, null );
-    }
-
-    public Uni<Response> doGet( String path, HttpServerRequest request, String trackingId, StoreKey storeKey )
+    public Uni<Response> doGet( String path, HttpServerRequest request )
                     throws Exception
     {
-        TrackedContentEntry entry = null;
-        if ( trackingId != null )
-        {
-            entry = new TrackedContentEntry( new TrackingKey( trackingId ), storeKey, AccessChannel.NATIVE, "",
-                                             "/" + path.replaceFirst( "^\\/?(\\w+\\/){5}", "" ), StoreEffect.DOWNLOAD,
-                                             0L, "", "", "" );
-        }
-        TrackedContentEntry finalEntry = entry;
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                client.get( p, request ).call(), request.method(), finalEntry ) ) );
+                client.get( p, request ).call(), request.method() ) ) );
     }
 
     public Uni<Response> doPost( String trackingId, String packageType, String type, String name, String path,
@@ -123,28 +101,13 @@ public class ProxyService
             throws Exception
     {
         String contentPath = UrlUtils.buildUrl( FOLO_TRACK_REST_BASE_PATH, trackingId, packageType, type, name, path );
-        return doPut( contentPath, is, trackingId, new StoreKey( packageType, StoreType.valueOf( type ), name ),
-                      request );
+        return doPut( contentPath, is, request );
     }
 
     public Uni<Response> doPut( String path, InputStream is, HttpServerRequest request ) throws Exception
     {
-        return doPut( path, is, null, null, request );
-    }
-
-    public Uni<Response> doPut( String path, InputStream is, String trackingId, StoreKey storeKey,
-                                HttpServerRequest request ) throws Exception
-    {
-        TrackedContentEntry entry = null;
-        if ( trackingId != null )
-        {
-            entry = new TrackedContentEntry( new TrackingKey( trackingId ), storeKey, AccessChannel.NATIVE,
-                                             "http://" + proxyConfiguration.getServices().iterator().next().host + "/"
-                                                             + path, path, StoreEffect.UPLOAD, 0L, "", "", "" );
-        }
-        TrackedContentEntry finalEntry = entry;
         return normalizePathAnd( path, p -> classifier.classifyAnd( p, request, ( client, service ) -> wrapAsyncCall(
-                        client.put( p, is, request ).call(), request.method(), finalEntry ) ) );
+                        client.put( p, is, request ).call(), request.method() ) ) );
     }
 
     public Uni<Response> doDelete( String path, HttpServerRequest request ) throws Exception
@@ -155,14 +118,8 @@ public class ProxyService
 
     public Uni<Response> wrapAsyncCall( WebClientAdapter.CallAdapter asyncCall, HttpMethod method )
     {
-        return wrapAsyncCall( asyncCall, method, null );
-    }
-
-    public Uni<Response> wrapAsyncCall( WebClientAdapter.CallAdapter asyncCall, HttpMethod method,
-                                        TrackedContentEntry entry )
-    {
         Uni<Response> ret =
-                        asyncCall.enqueue().onItem().transform( ( resp ) -> convertProxyResp( resp, method, entry ) );
+                        asyncCall.enqueue().onItem().transform( ( resp ) -> convertProxyResp( resp, method ) );
         return ret.onFailure().recoverWithItem( this::handleProxyException );
     }
 
@@ -180,7 +137,7 @@ public class ProxyService
      * Read status and headers from proxy resp and set them to direct response.
      * @param resp proxy resp
      */
-    private Response convertProxyResp( okhttp3.Response resp, HttpMethod method, TrackedContentEntry entry )
+    private Response convertProxyResp( okhttp3.Response resp, HttpMethod method )
     {
         logger.debug( "Proxy resp: {} {}", resp.code(), resp.message() );
         logger.trace( "Raw resp headers:\n{}", resp.headers() );
@@ -192,10 +149,7 @@ public class ProxyService
                 builder.header( header.getFirst(), header.getSecond() );
             }
         } );
-        String indyOrigin = resp.header( "indy-origin" );
-        String serviceOrigin = "http://" + proxyConfiguration.getServices().iterator().next().host;
-        builder.entity( new ProxyStreamingOutput( resp.body(), entry, serviceOrigin, indyOrigin, reportService,
-                                                  otel ) );
+        builder.entity( new ProxyStreamingOutput( resp.body(), otel ) );
         return builder.build();
     }
 
