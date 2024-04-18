@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2022-2023 Red Hat, Inc. (https://github.com/Commonjava/indy-tracking-service)
+ * Copyright (C) 2022-2023 Red Hat, Inc. (https://github.com/Commonjava/indy-sidecar)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
