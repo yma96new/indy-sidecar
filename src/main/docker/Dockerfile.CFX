@@ -4,7 +4,7 @@ EXPOSE 8080
 
 USER root
 
-ADD start-service.sh /usr/local/bin/start-service.sh
+ADD src/main/docker/start-service.sh /usr/local/bin/start-service.sh
 
 RUN chmod +x /usr/local/bin/*
 
