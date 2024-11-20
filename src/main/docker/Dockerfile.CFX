@@ -19,20 +19,20 @@ ADD src/main/image/start-service.sh /usr/local/bin/start-service.sh
 
 RUN chmod +x /usr/local/bin/*
 
-RUN mkdir -p /opt/indy-repository-service/log && \
-  chmod -R 777 /opt/indy-repository-service && \
-  chmod -R 777 /opt/indy-repository-service/log
+RUN mkdir -p /opt/indy-sidecar/log && \
+  chmod -R 777 /opt/indy-sidecar && \
+  chmod -R 777 /opt/indy-sidecar/log
 
-COPY --from=build /app/target/*-runner.jar /opt/indy-repository-service/indy-repository-service-runner.jar
-RUN chmod +r /opt/indy-repository-service/indy-repository-service-runner.jar
+COPY --from=build /app/target/*-runner.jar /opt/indy-sidecar/indy-sidecar-runner.jar
+RUN chmod +r /opt/indy-sidecar/indy-sidecar-runner.jar
 
 # Run as non-root user
 RUN chgrp -R 0 /opt && \
     chmod -R g=u /opt && \
-    chgrp -R 0 /opt/indy-repository-service && \
-    chmod -R g=u /opt/indy-repository-service && \
-    chgrp -R 0 /opt/indy-repository-service/log && \
-    chmod -R g=u /opt/indy-repository-service/log
+    chgrp -R 0 /opt/indy-sidecar && \
+    chmod -R g=u /opt/indy-sidecar && \
+    chgrp -R 0 /opt/indy-sidecar/log && \
+    chmod -R g=u /opt/indy-sidecar/log
 
 USER 1001
 
