@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/openjdk-11:1.20-2 AS build
+FROM registry.access.redhat.com/ubi8/openjdk-11:1.21-1.1733300800 AS build
 
 USER root
 RUN mkdir /app
